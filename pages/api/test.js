@@ -5,3 +5,4 @@ export default function handler(req, res) {
     privateKeyStart: process.env.GOOGLE_SHEETS_PRIVATE_KEY?.substring(0, 50)
   });
 }
+
