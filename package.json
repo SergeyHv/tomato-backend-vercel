@@ -1,28 +1,7 @@
 {
   "name": "tomato-backend-vercel",
   "version": "1.0.0",
-  "description": "Backend for tomato admin panel",
-  "main": "index.js",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "keywords": ["tomato", "admin", "api", "vercel"],
-  "author": "SergeyHv",
-  "license": "MIT",
   "dependencies": {
-    "next": "^14.2.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "googleapis": "^126.0.1",
-    "formidable": "^3.5.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "google-spreadsheet": "^3.3.0"
   }
 }
