@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Каталог семян</title>
+  <!-- Подключаем стили -->
+  <link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+  <h1>Каталог семян</h1>
+  <div class="controls">
+    <button data-category="all">Все</button>
+    <button data-category="tomatoes">Томаты</button>
+    <button data-category="peppers">Перцы</button>
+    <input type="text" id="search" placeholder="Поиск по названию или тегам...">
+    <select id="sort">
+      <option value="none">Без сортировки</option>
+      <option value="title-asc">Название А‑Я</option>
+      <option value="title-desc">Название Я‑А</option>
+      <option value="stock">По наличию</option>
+    </select>
+  </div>
+
+  <div class="grid" id="catalog"></div>
+
+  <!-- Модальное окно -->
+  <div class="modal" id="modal">
+    <div class="modal-content" id="modalContent">
+      <span class="close" id="closeBtn">&times;</span>
+    </div>
+  </div>
+
+  <!-- Подключаем JS -->
+  <script src="catalog.js"></script>
+</body>
+</html>
