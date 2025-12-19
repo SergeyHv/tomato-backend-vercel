@@ -1,3 +1,4 @@
+// test route check
 export default function handler(req, res) {
   res.status(200).json({
     spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
