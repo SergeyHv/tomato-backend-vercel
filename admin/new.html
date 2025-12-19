@@ -3,57 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Добавить сорт</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #2a9d8f;
-    }
-    form {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 12px 20px;
-      background: #2a9d8f;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #21867a;
-    }
-    .preview {
-      margin-top: 10px;
-    }
-    .preview img {
-      max-width: 100%;
-      border-radius: 10px;
-    }
-  </style>
+  <link rel="stylesheet" href="new.css">
 </head>
 <body>
   <h1>Добавить новый сорт</h1>
@@ -83,65 +33,6 @@
     <button type="submit">Сохранить сорт</button>
   </form>
 
-  <script>
-    const form = document.getElementById('productForm');
-    const imageUpload = document.getElementById('imageUpload');
-    const preview = document.getElementById('preview');
-
-    let imageUrl = '';
-
-    // Превью фото
-    imageUpload.addEventListener('change', () => {
-      const file = imageUpload.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          preview.innerHTML = `<img src="${e.target.result}" alt="preview">`;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // Отправка формы
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-
-      // 1. Загружаем фото в Blob Storage через API
-      const file = imageUpload.files[0];
-      if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const res = await fetch('/api/admin/upload-image', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        imageUrl = data.url; // URL из Blob Storage
-      }
-
-      // 2. Формируем JSON товара
-      const product = {
-        title: document.getElementById('title').value,
-        category: document.getElementById('category').value,
-        description: document.getElementById('description').value,
-        props: document.getElementById('props').value,
-        tags: document.getElementById('tags').value,
-        images: imageUrl,
-        stock: "TRUE"
-      };
-
-      // 3. Отправляем товар в Google Sheets через API
-      await fetch('/api/admin/add-product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(product)
-      });
-
-      alert('Сорт успешно добавлен!');
-      form.reset();
-      preview.innerHTML = '';
-    });
-  </script>
+  <script src="new.js"></script>
 </body>
 </html>
