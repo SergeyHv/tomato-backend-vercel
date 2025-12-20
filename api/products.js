@@ -1,6 +1,16 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 
 export default async function handler(req, res) {
+  // ✅ CORS — разрешаем запросы с фронтенда
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // ✅ Preflight (браузер отправляет OPTIONS перед GET)
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   try {
     const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_SPREADSHEET_ID);
 
@@ -30,4 +40,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
- 
