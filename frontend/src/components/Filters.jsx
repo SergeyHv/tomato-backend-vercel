@@ -4,6 +4,7 @@ export default function Filters({ onSearch, onCategory, onSort }) {
   return (
     <div className="w-full bg-gray-100 p-4 flex gap-4 items-center shadow-sm">
 
+      {/* Поиск */}
       <input
         type="text"
         placeholder="Поиск..."
@@ -11,6 +12,7 @@ export default function Filters({ onSearch, onCategory, onSort }) {
         onChange={(e) => onSearch(e.target.value)}
       />
 
+      {/* Категории */}
       <select
         className="px-4 py-2 border rounded-lg"
         onChange={(e) => onCategory(e.target.value)}
@@ -21,6 +23,7 @@ export default function Filters({ onSearch, onCategory, onSort }) {
         <option value="cucumbers">Огурцы</option>
       </select>
 
+      {/* Сортировка */}
       <select
         className="px-4 py-2 border rounded-lg"
         onChange={(e) => onSort(e.target.value)}
