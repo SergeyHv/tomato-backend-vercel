@@ -5,6 +5,9 @@ import { adaptProduct } from "./utils/adapter";
 
 export default function App() {
   const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+
 
   useEffect(() => {
     fetch("/api/products")
