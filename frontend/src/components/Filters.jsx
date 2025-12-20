@@ -1,40 +1,40 @@
-import React from "react";
+import React, { useState } from "react";
+import FiltersPanel from "./FiltersPanel";
 
-export default function Filters({ onSearch, onCategory, onSort }) {
+export default function FiltersShell({
+  selectedColor,
+  setSelectedColor,
+  selectedType,
+  setSelectedType,
+  sort,
+  setSort
+}) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="w-full bg-gray-100 p-4 flex gap-4 items-center shadow-sm">
-
-      {/* Поиск */}
-      <input
-        type="text"
-        placeholder="Поиск..."
-        className="flex-1 px-4 py-2 border rounded-lg"
-        onChange={(e) => onSearch(e.target.value)}
-      />
-
-      {/* Категории */}
-      <select
-        className="px-4 py-2 border rounded-lg"
-        onChange={(e) => onCategory(e.target.value)}
+    <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 mt-6 mb-6">
+      
+      {/* Кнопка */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="px-5 py-2.5 bg-white border border-rose-200 rounded-full shadow-sm text-rose-700 hover:border-rose-400 transition-all"
       >
-        <option value="">Все категории</option>
-        <option value="tomatoes">Томаты</option>
-        <option value="peppers">Перцы</option>
-        <option value="cucumbers">Огурцы</option>
-      </select>
+        {open ? "Скрыть фильтры" : "Фильтры"}
+      </button>
 
-      {/* Сортировка */}
-      <select
-        className="px-4 py-2 border rounded-lg"
-        onChange={(e) => onSort(e.target.value)}
-      >
-        <option value="">Без сортировки</option>
-        <option value="price-asc">Цена ↑</option>
-        <option value="price-desc">Цена ↓</option>
-        <option value="name-asc">Название А→Я</option>
-        <option value="name-desc">Название Я→А</option>
-      </select>
-
+      {/* Раскрывающийся блок */}
+      {open && (
+        <div className="mt-4">
+          <FiltersPanel
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
+            selectedType={selectedType}
+            setSelectedType={setSelectedType}
+            sort={sort}
+            setSort={setSort}
+          />
+        </div>
+      )}
     </div>
   );
 }
