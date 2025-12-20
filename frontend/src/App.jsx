@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Header from "./components/Header";
 import Filters from "./components/Filters";
 import ProductGrid from "./components/ProductGrid";
-import { adaptProduct } from "./utils/adapter";
+import { loadProducts } from "./utils/adapter";
 
 export default function App() {
   const [products, setProducts] = useState([]);
@@ -10,16 +10,10 @@ export default function App() {
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("");
 
-  // ✅ Загружаем данные из backend и адаптируем
+  // ✅ Загружаем данные из backend через adapter.js
   useEffect(() => {
-  fetch("https://tomato-backend-vercel.vercel.app/api/products")
-    .then(res => res.json())
-    .then(data => {
-      const adapted = data.map(adaptProduct);
-      setProducts(adapted);
-    });
-}, []);
-
+    loadProducts().then(setProducts);
+  }, []);
 
   // ✅ Маппер категории (backend → frontend)
   function mapCategory(cat) {
@@ -35,7 +29,7 @@ export default function App() {
     }
   }
 
-  // ✅ Фильтрация + сортировка
+  // ✅ Фильтрация
   let filtered = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = category ? p.type === mapCategory(category) : true;
