@@ -60,7 +60,8 @@ export default function App({ products = [] }) {
         typeOptions={typeOptions}
       />
 
-      <ProductGrid products={filtered} />
+      <ProductGrid products={filtered || []} />
+
     </div>
   );
 }
