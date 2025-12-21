@@ -9,37 +9,41 @@ export default function App({ products = [] }) {
   const [sort, setSort] = useState("popularity");
   const [search, setSearch] = useState("");
 
+  // Всегда массив: приводим вход к массиву
+  const safeProducts = Array.isArray(products) ? products : [];
+
+  // Динамика опций (только на массиве)
   const colorOptions = useMemo(
-    () => ["all", ...new Set(products.map(p => p.color).filter(Boolean))],
-    [products]
+    () => ["all", ...new Set(safeProducts.map(p => p?.color).filter(Boolean))],
+    [safeProducts]
   );
   const typeOptions = useMemo(
-    () => ["all", ...new Set(products.map(p => p.type).filter(Boolean))],
-    [products]
+    () => ["all", ...new Set(safeProducts.map(p => p?.type).filter(Boolean))],
+    [safeProducts]
   );
 
+  // Фильтрация/сортировка (только на массиве)
   const filtered = useMemo(() => {
-    let result = Array.isArray(products) ? products : [];
+    let result = safeProducts;
 
     if (selectedColor !== "all") {
-      result = result.filter(p => p.color === selectedColor);
+      result = result.filter(p => p?.color === selectedColor);
     }
     if (selectedType !== "all") {
-      result = result.filter(p => p.type === selectedType);
+      result = result.filter(p => p?.type === selectedType);
     }
     if (search) {
-      result = result.filter(p =>
-        (p.name || "").toLowerCase().includes(search.toLowerCase())
-      );
+      const q = search.toLowerCase();
+      result = result.filter(p => (p?.name || "").toLowerCase().includes(q));
     }
 
-    if (sort === "price-asc") result = [...result].sort((a, b) => (a.price || 0) - (b.price || 0));
-    if (sort === "price-desc") result = [...result].sort((a, b) => (b.price || 0) - (a.price || 0));
-    if (sort === "name-asc") result = [...result].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    if (sort === "name-desc") result = [...result].sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+    if (sort === "price-asc")  result = [...result].sort((a, b) => (a?.price || 0) - (b?.price || 0));
+    if (sort === "price-desc") result = [...result].sort((a, b) => (b?.price || 0) - (a?.price || 0));
+    if (sort === "name-asc")   result = [...result].sort((a, b) => (a?.name || "").localeCompare(b?.name || ""));
+    if (sort === "name-desc")  result = [...result].sort((a, b) => (b?.name || "").localeCompare(a?.name || ""));
 
     return result;
-  }, [products, selectedColor, selectedType, sort, search]);
+  }, [safeProducts, selectedColor, selectedType, sort, search]);
 
   return (
     <div className="pt-[90px]">
