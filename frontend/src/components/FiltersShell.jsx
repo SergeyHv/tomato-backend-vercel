@@ -22,19 +22,21 @@ export default function FiltersShell({
         {open ? "Скрыть фильтры" : "Фильтры"}
       </button>
 
-      {/* Раскрывающийся блок */}
-      {open && (
-        <div className="mt-4">
-          <FiltersPanel
-            selectedColor={selectedColor}
-            setSelectedColor={setSelectedColor}
-            selectedType={selectedType}
-            setSelectedType={setSelectedType}
-            sort={sort}
-            setSort={setSort}
-          />
-        </div>
-      )}
+      {/* Анимированный блок */}
+      <div
+        className={`transition-all duration-500 ease-in-out overflow-hidden ${
+          open ? "max-h-[1000px] opacity-100 mt-4" : "max-h-0 opacity-0"
+        }`}
+      >
+        <FiltersPanel
+          selectedColor={selectedColor}
+          setSelectedColor={setSelectedColor}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          sort={sort}
+          setSort={setSort}
+        />
+      </div>
     </div>
   );
 }
