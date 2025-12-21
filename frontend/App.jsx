@@ -6,7 +6,9 @@ export default function App() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch("/api/products")
+    const apiUrl = import.meta.env.VITE_API_URL;
+
+    fetch(`${apiUrl}/api/products`)
       .then(res => res.json())
       .then(data => {
         const safeProducts = Array.isArray(data)
