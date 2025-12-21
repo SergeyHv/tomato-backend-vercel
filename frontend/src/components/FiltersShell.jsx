@@ -22,20 +22,23 @@ export default function FiltersShell({
         {open ? "Скрыть фильтры" : "Фильтры"}
       </button>
 
-      {/* Анимированный блок */}
-      <div
-        className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          open ? "max-h-[1000px] opacity-100 mt-4" : "max-h-0 opacity-0"
-        }`}
-      >
-        <FiltersPanel
-          selectedColor={selectedColor}
-          setSelectedColor={setSelectedColor}
-          selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          sort={sort}
-          setSort={setSort}
-        />
+      {/* Боковая панель */}
+      {open && (
+        <div className="fixed top-[90px] left-0 h-[calc(100vh-90px)] w-[280px] bg-white border-r border-rose-100 shadow-lg z-40 p-6 overflow-y-auto">
+          <FiltersPanel
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
+            selectedType={selectedType}
+            setSelectedType={setSelectedType}
+            sort={sort}
+            setSort={setSort}
+          />
+        </div>
+      )}
+
+      {/* Сдвиг контента вправо, если панель открыта */}
+      <div className={open ? "ml-[300px]" : ""}>
+        {/* Здесь будет ProductGrid */}
       </div>
     </div>
   );
