@@ -7,9 +7,12 @@ export default function FiltersPanel({
   setSelectedType,
   sort,
   setSort,
-  colorOptions,
-  typeOptions
+  colorOptions = [],
+  typeOptions = []
 }) {
+  const colors = Array.isArray(colorOptions) ? colorOptions : [];
+  const types  = Array.isArray(typeOptions) ? typeOptions : [];
+
   return (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-rose-100 space-y-10">
 
@@ -19,7 +22,7 @@ export default function FiltersPanel({
           Цвет плода
         </h4>
         <div className="flex flex-wrap gap-2">
-          {colorOptions.map(c => (
+          {colors.map((c) => (
             <button
               key={c}
               onClick={() => setSelectedColor(c)}
@@ -41,7 +44,7 @@ export default function FiltersPanel({
           Тип томата
         </h4>
         <div className="flex flex-wrap gap-2">
-          {typeOptions.map(t => (
+          {types.map((t) => (
             <button
               key={t}
               onClick={() => setSelectedType(t)}
