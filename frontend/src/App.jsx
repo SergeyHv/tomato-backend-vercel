@@ -1,67 +1,52 @@
-import React, { useEffect, useState } from "react";
-import Header from "./components/Header";
-import FiltersShell from "./components/FiltersShell";
-import ProductGrid from "./components/ProductGrid";
-import { loadProducts } from "./utils/adapter";
+import React, { useState, useMemo } from "react";
+import Header from "./Header";
+import FiltersShell from "./FiltersShell";
+import ProductGrid from "./ProductGrid";
 
-export default function App() {
-  // ✅ Данные каталога
-  const [products, setProducts] = useState([]);
-
-  // ✅ Состояния фильтров
-  const [search, setSearch] = useState("");
+export default function App({ products }) {
   const [selectedColor, setSelectedColor] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
-
-  // ✅ Сортировка
   const [sort, setSort] = useState("popularity");
+  const [search, setSearch] = useState("");
 
-  // ✅ Корзина (пока пустая, но архитектура заложена)
-  const [cart, setCart] = useState([]);
-
-  // ✅ Загрузка данных из backend
-  useEffect(() => {
-    loadProducts().then(setProducts);
-  }, []);
-
-  // ✅ Фильтрация по поиску
-  let filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+  // Динамические значения из таблицы (с защитой)
+  const colorOptions = useMemo(
+    () => ["all", ...new Set((products || []).map(p => p.color).filter(Boolean))],
+    [products]
+  );
+  const typeOptions = useMemo(
+    () => ["all", ...new Set((products || []).map(p => p.type).filter(Boolean))],
+    [products]
   );
 
-  // ✅ Фильтрация по цвету
-  if (selectedColor !== "all") {
-    filtered = filtered.filter((p) => p.color === selectedColor);
-  }
+  // Фильтрация и сортировка (с защитой)
+  const filtered = useMemo(() => {
+    let result = products || [];
 
-  // ✅ Фильтрация по типу
-  if (selectedType !== "all") {
-    filtered = filtered.filter((p) => p.type === selectedType);
-  }
+    if (selectedColor !== "all") {
+      result = result.filter(p => p.color === selectedColor);
+    }
+    if (selectedType !== "all") {
+      result = result.filter(p => p.type === selectedType);
+    }
+    if (search) {
+      result = result.filter(p =>
+        (p.name || "").toLowerCase().includes(search.toLowerCase())
+      );
+    }
 
-  // ✅ Сортировка
-  if (sort === "price-asc") {
-    filtered = [...filtered].sort((a, b) => a.price - b.price);
-  }
-  if (sort === "price-desc") {
-    filtered = [...filtered].sort((a, b) => b.price - a.price);
-  }
-  if (sort === "name-asc") {
-    filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-  }
-  if (sort === "name-desc") {
-    filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
-  }
+    if (sort === "price-asc") result = [...result].sort((a, b) => (a.price || 0) - (b.price || 0));
+    if (sort === "price-desc") result = [...result].sort((a, b) => (b.price || 0) - (a.price || 0));
+    if (sort === "name-asc") result = [...result].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    if (sort === "name-desc") result = [...result].sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+
+    return result;
+  }, [products, selectedColor, selectedType, sort, search]);
 
   return (
     <div className="pt-[90px]">
-      {/* ✅ Фиксированный хедер */}
-      <Header
-        onSearch={setSearch}
-        cartCount={cart.length}
-      />
+      <Header onSearch={setSearch} cartCount={0} />
 
-      {/* ✅ Кнопка “Фильтры” + раскрывающийся премиальный блок */}
       <FiltersShell
         selectedColor={selectedColor}
         setSelectedColor={setSelectedColor}
@@ -69,9 +54,10 @@ export default function App() {
         setSelectedType={setSelectedType}
         sort={sort}
         setSort={setSort}
+        colorOptions={colorOptions}
+        typeOptions={typeOptions}
       />
 
-      {/* ✅ Каталог */}
       <ProductGrid products={filtered} />
     </div>
   );
