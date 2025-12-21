@@ -1,25 +1,16 @@
 import React from "react";
 
-export default function ProductCard({ product = {} }) {
+export default function ProductCard({ product }) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 flex flex-col gap-3 hover:shadow-lg transition">
+    <div className="border rounded-lg p-4 shadow bg-white">
       <img
-        src={product?.image || ""}
-        alt={product?.name || "Без названия"}
-        className="w-full h-40 object-cover rounded-lg"
+        src={product.image}
+        alt={product.name}
+        className="w-full h-48 object-cover rounded"
       />
-
-      <h3 className="text-lg font-semibold">{product?.name || "Нет имени"}</h3>
-
-      <p className="text-gray-600 text-sm">{product?.type || "Не указан тип"}</p>
-
-      <div className="text-red-600 font-bold text-xl">
-        {product?.price ?? "—"} ₽
-      </div>
-
-      <button className="mt-auto bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">
-        Подробнее
-      </button>
+      <h2 className="text-lg font-semibold mt-2">{product.name}</h2>
+      <p className="text-sm text-gray-600">{product.description}</p>
+      <p className="text-md font-bold mt-2">{product.price} ₽</p>
     </div>
   );
 }
