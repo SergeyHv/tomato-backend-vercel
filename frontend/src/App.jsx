@@ -6,8 +6,9 @@ export default function App() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    // Используем полный URL к бэкенду
-    fetch("https://tomato-backend-vercel.vercel.app/api/products")
+    const apiUrl = import.meta.env.VITE_API_URL;
+
+    fetch(`${apiUrl}/api/products`)
       .then(res => res.json())
       .then(data => {
         const safeProducts = Array.isArray(data)
