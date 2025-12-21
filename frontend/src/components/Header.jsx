@@ -1,16 +1,16 @@
 import React from "react";
 
-export default function Header({ onSearch, cartCount }) {
+export default function ProductCard({ product }) {
   return (
-    <header className="fixed top-0 left-0 w-full bg-white shadow-md z-50 flex items-center justify-between px-6 py-4">
-      <h1 className="text-xl font-bold">Каталог</h1>
-      <input
-        type="text"
-        placeholder="Поиск..."
-        className="border rounded px-3 py-1"
-        onChange={(e) => onSearch(e.target.value)}
+    <div className="border rounded-lg p-4 shadow bg-white hover:shadow-lg transition">
+      <img
+        src={product.image}
+        alt={product.name}
+        className="w-full h-48 object-cover rounded"
       />
-      <div className="ml-4">🛒 {cartCount}</div>
-    </header>
+      <h2 className="text-lg font-semibold mt-2 text-pink-700">{product.name}</h2>
+      <p className="text-sm text-gray-600">{product.description}</p>
+      <p className="text-md font-bold mt-2 text-gray-800">{product.price} ₽</p>
+    </div>
   );
 }
