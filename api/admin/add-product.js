@@ -10,56 +10,38 @@ export default async function handler(req, res) {
   }
 
   try {
-    // СИСТЕМНАЯ ПРОВЕРКА: Пробуем все варианты имен переменных
-    const pKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY;
-    const pEmail = process.env.GOOGLE_SHEETS_CLIENT_EMAIL || process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const pSheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || process.env.GOOGLE_SHEET_ID;
-
-    if (!pKey) {
-      return res.status(500).json({ error: "Ключ GOOGLE_SHEETS_PRIVATE_KEY не найден в настройках Vercel" });
-    }
-
     const serviceAccountAuth = new JWT({
-      email: pEmail,
-      key: pKey.replace(/\\n/g, '\n'),
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    const doc = new GoogleSpreadsheet(pSheetId, serviceAccountAuth);
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
     await sheet.loadHeaderRow();
     const rows = await sheet.getRows();
 
-    // Синхронизируем поля с таблицей
-    const rowData = { ...product };
-    
-    // Собираем свойства в строку props для совместимости
-    const propsParts = [];
-    if (product.growth_type) propsParts.push(`growth_type=${product.growth_type}`);
-    if (product.shape) propsParts.push(`shape=${product.shape}`);
-    if (product.maturity) propsParts.push(`maturity=${product.maturity}`);
-    if (product.color) propsParts.push(`color=${product.color}`);
-    rowData.props = propsParts.join('; ');
-
     const productId = String(product.id).trim();
     const existingRow = rows.find(r => String(r.get('id')).trim() === productId);
 
+    // Подготавливаем данные: если поле - объект или массив, превращаем в строку
+    const cleanData = {};
+    Object.keys(product).forEach(key => {
+        cleanData[key] = Array.isArray(product[key]) ? product[key].join(', ') : product[key];
+    });
+
     if (existingRow) {
       sheet.headerValues.forEach(h => {
-        if (rowData[h] !== undefined) {
-          const val = Array.isArray(rowData[h]) ? rowData[h].join(', ') : rowData[h];
-          existingRow.set(h, val);
-        }
+        if (cleanData[h] !== undefined) existingRow.set(h, cleanData[h]);
       });
       await existingRow.save();
-      return res.status(200).json({ message: 'Обновлено' });
+      return res.status(200).json({ message: 'OK' });
     } else {
-      await sheet.addRow(rowData);
-      return res.status(200).json({ message: 'Добавлено' });
+      await sheet.addRow(cleanData);
+      return res.status(200).json({ message: 'OK' });
     }
   } catch (error) {
-    console.error("ОШИБКА:", error.message);
-    return res.status(500).json({ error: "Ошибка таблицы: " + error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
