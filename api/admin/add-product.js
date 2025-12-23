@@ -5,43 +5,47 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { password, product } = req.body;
 
+  // Проверка пароля из переменных окружения
   if (password !== process.env.ADMIN_PASSWORD) {
     return res.status(403).json({ error: 'Неверный пароль' });
   }
 
   try {
+    // Используем ПРОВЕРЕННЫЕ имена переменных
+    const pKey = process.env.GOOGLE_PRIVATE_KEY;
+    const pEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const pSheetId = process.env.GOOGLE_SHEET_ID;
+
+    if (!pKey) throw new Error("GOOGLE_PRIVATE_KEY не найден в Vercel");
+
     const serviceAccountAuth = new JWT({
-      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      email: pEmail,
+      key: pKey.replace(/\\n/g, '\n'),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
+    const doc = new GoogleSpreadsheet(pSheetId, serviceAccountAuth);
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
+    
+    // Загружаем заголовки, чтобы метод addRow понимал, куда писать
     await sheet.loadHeaderRow();
-    const rows = await sheet.getRows();
 
-    const productId = String(product.id).trim();
-    const existingRow = rows.find(r => String(r.get('id')).trim() === productId);
-
-    // Подготавливаем данные: если поле - объект или массив, превращаем в строку
-    const cleanData = {};
-    Object.keys(product).forEach(key => {
-        cleanData[key] = Array.isArray(product[key]) ? product[key].join(', ') : product[key];
+    // Добавляем строку. Библиотека сама сопоставит ключи объекта с именами колонок.
+    await sheet.addRow({
+      id: product.id,
+      title: product.title,
+      category: product.category,
+      price: product.price,
+      description: product.description,
+      tags: product.tags,
+      images: product.images,
+      stock: product.stock || "TRUE"
     });
 
-    if (existingRow) {
-      sheet.headerValues.forEach(h => {
-        if (cleanData[h] !== undefined) existingRow.set(h, cleanData[h]);
-      });
-      await existingRow.save();
-      return res.status(200).json({ message: 'OK' });
-    } else {
-      await sheet.addRow(cleanData);
-      return res.status(200).json({ message: 'OK' });
-    }
+    return res.status(200).json({ message: 'Success' });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error("Server Error:", error.message);
+    return res.status(500).json({ error: "Ошибка таблицы: " + error.message });
   }
 }
