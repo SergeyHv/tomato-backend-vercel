@@ -3,22 +3,20 @@ import { JWT } from 'google-auth-library';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  
   const { password, product } = req.body;
 
-  // 1. ПРОВЕРКА ПАРОЛЯ
-  if (!password || password !== process.env.ADMIN_PASSWORD) {
+  if (password !== process.env.ADMIN_PASSWORD) {
     return res.status(403).json({ error: 'Неверный пароль' });
   }
 
   try {
-    // Используем ТЕ ЖЕ имена, что и в api/products.js
-    const pKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY; 
+    // Имена переменных строго как в api/products.js
+    const pKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
     const pEmail = process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
     const pSheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
 
-    if (!pKey) {
-      return res.status(500).json({ error: "Ошибка настроек: GOOGLE_SHEETS_PRIVATE_KEY не найден" });
+    if (!pKey || !pEmail || !pSheetId) {
+      throw new Error("Отсутствуют настройки Google API в Vercel Environment Variables");
     }
 
     const serviceAccountAuth = new JWT({
@@ -30,35 +28,38 @@ export default async function handler(req, res) {
     const doc = new GoogleSpreadsheet(pSheetId, serviceAccountAuth);
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
-    
     await sheet.loadHeaderRow();
     const rows = await sheet.getRows();
 
+    // Подготовка данных для записи
     const productId = String(product.id).trim();
+    const rowData = { ...product };
+
+    // Сборка строки props для совместимости с парсером сайта
+    const propsParts = [];
+    if (product.growth_type) propsParts.push(`growth_type=${product.growth_type}`);
+    if (product.shape) propsParts.push(`shape=${product.shape}`);
+    if (product.maturity) propsParts.push(`maturity=${product.maturity}`);
+    if (product.color) propsParts.push(`color=${product.color}`);
+    rowData.props = propsParts.join('; ');
+
     const existingRow = rows.find(r => String(r.get('id')).trim() === productId);
 
     if (existingRow) {
-      // ОБНОВЛЕНИЕ
       sheet.headerValues.forEach(h => {
-        if (product[h] !== undefined) {
-          // Если это массив (например, картинки), превращаем в строку для таблицы
-          const value = Array.isArray(product[h]) ? product[h].join(', ') : product[h];
-          existingRow.set(h, value);
+        if (rowData[h] !== undefined) {
+          // Если картинки пришли массивом, превращаем в строку
+          const val = Array.isArray(rowData[h]) ? rowData[h].join(', ') : rowData[h];
+          existingRow.set(h, val);
         }
       });
       await existingRow.save();
-      return res.status(200).json({ message: 'Updated' });
+      return res.status(200).json({ message: 'Success Update' });
     } else {
-      // СОЗДАНИЕ
-      const newRow = {};
-      sheet.headerValues.forEach(h => {
-        const val = product[h];
-        newRow[h] = Array.isArray(val) ? val.join(', ') : (val || '');
-      });
-      await sheet.addRow(newRow);
-      return res.status(200).json({ message: 'Added' });
+      await sheet.addRow(rowData);
+      return res.status(200).json({ message: 'Success Add' });
     }
   } catch (error) {
-    return res.status(500).json({ error: "Ошибка таблицы: " + error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
