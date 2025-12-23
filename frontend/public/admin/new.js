@@ -25,9 +25,14 @@ imageUpload.addEventListener('change', () => {
 
 form.addEventListener('submit', async e => {
     e.preventDefault();
+    
+    // Сразу сохраняем пароль, как только нажата кнопка
+    const password = document.getElementById('adminPassword').value;
+    localStorage.setItem('tomato_admin_pass', password); 
+
     const submitBtn = e.target.querySelector('button');
     submitBtn.disabled = true;
-    submitBtn.innerText = '⏳ Сохранение...';
+    submitBtn.innerText = '⏳ Загрузка...';
 
     // Сохраняем пароль в память, чтобы не вводить снова
     const password = document.getElementById('adminPassword').value;
