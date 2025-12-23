@@ -4,11 +4,13 @@
   "scripts": {
     "dev": "vite frontend",
     "build": "vite build frontend",
-    "start": "node api/products.js"
+    "preview": "vite preview frontend"
   },
   "dependencies": {
+    "@vercel/blob": "latest",
     "google-spreadsheet": "^4.1.1",
     "google-auth-library": "^9.4.1",
+    "googleapis": "^126.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
