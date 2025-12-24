@@ -12,17 +12,17 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
     const price = document.getElementById('price').value;
     const description = document.getElementById('description').value;
     const tags = document.getElementById('tags').value;
+    const props = document.getElementById('props').value; // НОВОЕ: дополнительные характеристики
     const imageFile = document.getElementById('imageUpload').files[0];
 
     try {
         let imageUrl = '';
 
-        // 2. Если выбрано фото — сначала загружаем его
+        // 2. Загрузка фото (если выбрано)
         if (imageFile) {
             const formData = new FormData();
             formData.append('file', imageFile);
             
-            // Здесь путь к вашему API загрузки картинок
             const uploadRes = await fetch('/api/admin/upload', {
                 method: 'POST',
                 body: formData
@@ -31,7 +31,7 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
             if (uploadData.url) imageUrl = uploadData.url;
         }
 
-        // 3. Отправляем все данные в таблицу
+        // 3. Отправка всех данных в таблицу
         const response = await fetch('/api/admin/add-product', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -42,8 +42,9 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
                 price,
                 description,
                 tags,
-                images: imageUrl, // Ссылка на загруженное фото
-                stock: true       // По умолчанию в наличии
+                props, // НОВОЕ
+                images: imageUrl,
+                stock: "TRUE"
             })
         });
 
@@ -66,7 +67,7 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
     }
 });
 
-// Логика превью картинки при выборе файла
+// Превью картинки
 document.getElementById('imageUpload').addEventListener('change', function(e) {
     const file = e.target.files[0];
     const preview = document.getElementById('preview');
