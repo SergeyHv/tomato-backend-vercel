@@ -2,12 +2,13 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Метод не разрешен' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Метод не разрешен. Используйте POST.' });
+  }
 
-  // 1. Получаем данные напрямую из req.body (без вложенного объекта product)
-  const { password, title, category, price, description, tags, images } = req.body;
+  const { password, title, category, price, description, tags, images, props } = req.body;
 
-  // 2. Проверка пароля
+  // Проверка пароля
   if (password !== process.env.ADMIN_PASSWORD) {
     return res.status(403).json({ error: 'Неверный пароль администратора' });
   }
@@ -23,16 +24,17 @@ export default async function handler(req, res) {
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
 
-    // 3. Добавляем строку. Названия ключей (слева) должны СОВПАДАТЬ с заголовками в Google Таблице
+    // Добавляем строку. Ключи должны строго совпадать с заголовками в таблице!
     await sheet.addRow({
-      id: Date.now().toString(), // Генерируем ID, если фронтенд его не прислал
-      title: title,
+      id: Date.now().toString(),
+      title: title || "",
       price: price || "1.5",
       images: images || "",
-      category: category,
+      category: category || "",
       tags: tags || "",
       description: description || "",
-      stock: "TRUE"
+      stock: "TRUE",
+      props: props || "" // 9-я колонка
     });
 
     return res.status(200).json({ success: true });
