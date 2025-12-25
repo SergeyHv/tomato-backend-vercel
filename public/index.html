@@ -1,76 +1,57 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Админ-панель Томатов</title>
-    <link rel="stylesheet" href="catalog.css">
+    <title>Tomato Admin</title>
     <style>
-        .admin-panel { max-width: 800px; margin: 20px auto; font-family: sans-serif; }
-        .form-add { background: #f4f4f4; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; }
+        body { font-family: sans-serif; padding: 20px; }
+        .row { margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        .btn-del { color: red; cursor: pointer; border: none; background: none; }
     </style>
 </head>
 <body>
-    <div class="admin-panel">
-        <h1>Управление коллекцией</h1>
-
-        <div class="form-add">
-            <h3>Добавить новый сорт</h3>
-            <input type="text" id="newName" placeholder="Название сорта">
-            <input type="text" id="newPrice" placeholder="Цена">
-            <button onclick="addItem()">Добавить в базу</button>
-        </div>
-
-        <table id="table">
-            <thead>
-                <tr>
-                    <th>Название</th>
-                    <th>Цена</th>
-                    <th>Действие</th>
-                </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
+    <h1>Управление сортами</h1>
+    
+    <div class="row">
+        <input type="text" id="name" placeholder="Название сорта">
+        <input type="text" id="price" placeholder="Цена">
+        <button onclick="save()">Добавить</button>
     </div>
 
+    <table id="table">
+        <thead>
+            <tr><th>Название</th><th>Цена</th><th>Действие</th></tr>
+        </thead>
+        <tbody id="list"></tbody>
+    </table>
+
     <script>
-        // 1. Загрузка данных
         async function load() {
-            const res = await fetch('/api/admin/products');
-            const data = await res.json();
-            const tbody = document.getElementById('tbody');
-            tbody.innerHTML = data.map(item => `
+            const r = await fetch('/api/admin/products');
+            const data = await r.json();
+            document.getElementById('list').innerHTML = data.map(p => `
                 <tr>
-                    <td>${item.name}</td>
-                    <td>${item.price}</td>
-                    <td><button class="btn-del" onclick="deleteItem(${item.id})">❌ Удалить</button></td>
+                    <td>${p.name}</td>
+                    <td>${p.price}</td>
+                    <td><button onclick="del(${p.id})">❌</button></td>
                 </tr>
             `).join('');
         }
 
-        // 2. Добавление данных
-        async function addItem() {
-            const name = document.getElementById('newName').value;
-            const price = document.getElementById('newPrice').value;
-            
+        async function save() {
+            const name = document.getElementById('name').value;
+            const price = document.getElementById('price').value;
             await fetch('/api/admin/add-product', {
                 method: 'POST',
                 body: JSON.stringify({ name, price })
             });
-            
-            document.getElementById('newName').value = '';
-            document.getElementById('newPrice').value = '';
-            load(); // Перерисовать таблицу
+            load();
         }
 
-        // 3. Удаление
-        async function deleteItem(id) {
-            if(confirm('Удалить?')) {
-                await fetch(`/api/admin/delete-product?id=${id}`);
-                load();
-            }
+        async function del(id) {
+            await fetch(`/api/admin/delete-product?id=${id}`);
+            load();
         }
 
         load();
