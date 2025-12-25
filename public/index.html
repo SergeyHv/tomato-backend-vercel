@@ -1,60 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Tomato Admin</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .row { margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    </style>
+    <title>Админка Томатов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Управление сортами</h1>
-    
-    <div class="row">
-        <input type="text" id="name" placeholder="Название сорта">
-        <input type="text" id="price" placeholder="Цена">
-        <button onclick="save()">Добавить</button>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+        <h1 class="text-2xl font-bold mb-4">Добавить новый сорт</h1>
+        <form id="productForm" class="space-y-4">
+            <input type="password" id="adminPassword" placeholder="Пароль" class="w-full p-2 border rounded" required>
+            <input type="text" id="title" placeholder="Название томата" class="w-full p-2 border rounded" required>
+            <input type="text" id="category" placeholder="Категория" class="w-full p-2 border rounded">
+            <input type="text" id="price" placeholder="Цена (например 1.5)" class="w-full p-2 border rounded">
+            <textarea id="description" placeholder="Описание" class="w-full p-2 border rounded"></textarea>
+            <input type="text" id="tags" placeholder="Теги (через запятую)" class="w-full p-2 border rounded">
+            <input type="text" id="props" placeholder="Характеристики (высота, вес)" class="w-full p-2 border rounded">
+            <input type="file" id="imageUpload" class="w-full">
+            <div id="preview"></div>
+            <button type="submit" class="w-full bg-red-500 text-white py-3 rounded-lg font-bold">🚀 Опубликовать</button>
+        </form>
     </div>
-
-    <table id="table">
-        <thead>
-            <tr><th>Название</th><th>Цена</th><th>Действие</th></tr>
-        </thead>
-        <tbody id="list"></tbody>
-    </table>
-
-    <script>
-        async function load() {
-            const r = await fetch('/api/admin/products');
-            const data = await r.json();
-            document.getElementById('list').innerHTML = data.map(p => `
-                <tr>
-                    <td>${p.name}</td>
-                    <td>${p.price}</td>
-                    <td><button onclick="del(${p.id})">❌</button></td>
-                </tr>
-            `).join('');
-        }
-
-        async function save() {
-            const name = document.getElementById('name').value;
-            const price = document.getElementById('price').value;
-            await fetch('/api/admin/add-product', {
-                method: 'POST',
-                body: JSON.stringify({ name, price })
-            });
-            load();
-        }
-
-        async function del(id) {
-            await fetch(`/api/admin/delete-product?id=${id}`);
-            load();
-        }
-
-        load();
-    </script>
+    <script src="new.js"></script>
 </body>
 </html>
