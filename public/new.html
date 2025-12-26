@@ -67,6 +67,23 @@
         <input id="prop_weight" placeholder="Вес плода (30г)"
           class="w-full p-2 border rounded-xl">
       </div>
+<!-- ФОТО СОРТА -->
+<div class="bg-gray-50 p-4 rounded-xl space-y-3">
+  <h3 class="font-bold">📸 Фото сорта</h3>
+
+  <input
+    type="file"
+    id="imageUpload"
+    accept="image/*"
+    class="w-full p-2 border rounded-xl bg-white"
+  >
+
+  <img
+    id="imagePreview"
+    src=""
+    class="hidden mt-3 rounded-xl max-h-48 object-cover border"
+  >
+</div>
 
       <!-- НАЛИЧИЕ -->
       <label class="flex items-center gap-3 text-lg">
