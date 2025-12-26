@@ -2,12 +2,11 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Используйте POST' });
-
-  const { password, title, category, price, description, tags, images, props } = req.body;
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  const { password, id, title, category, price, description, tags, images, props } = req.body;
 
   if (password !== process.env.ADMIN_PASSWORD) {
-    return res.status(403).json({ error: 'Неверный пароль' });
+    return res.status(403).json({ error: 'Wrong password' });
   }
 
   try {
@@ -21,12 +20,13 @@ export default async function handler(req, res) {
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
 
+    // Запись строго в 9 колонок по порядку
     await sheet.addRow({
-      id: Date.now().toString(),
-      title: title || "",
-      price: price || "0",
+      id: id,
+      title: title,
+      price: price || "",
       images: images || "",
-      category: category || "",
+      category: category,
       tags: tags || "",
       description: description || "",
       stock: "TRUE",
@@ -35,7 +35,6 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ details: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
