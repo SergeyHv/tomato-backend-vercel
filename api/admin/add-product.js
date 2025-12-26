@@ -2,6 +2,13 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
 export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  const { password, id, title, category, price, description, tags, images, props } = req.body;
+
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return res.status(403).json({ error: 'Wrong password' });
+  }
+
   try {
     const auth = new JWT({
       email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
@@ -12,16 +19,20 @@ export default async function handler(req, res) {
     const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_SPREADSHEET_ID, auth);
     await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
-    const rows = await sheet.getRows();
 
-    const products = rows.map(row => ({
-      id: row.get('id'),
-      title: row.get('title'),
-      category: row.get('category'),
-      stock: row.get('stock')
-    }));
+    await sheet.addRow({
+      id: id,
+      title: title,
+      price: price || "",
+      images: images || "",
+      category: category,
+      tags: tags || "",
+      description: description || "",
+      stock: "TRUE",
+      props: props || ""
+    });
 
-    return res.status(200).json(products);
+    return res.status(200).json({ success: true });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
