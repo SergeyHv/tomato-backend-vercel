@@ -1,49 +1,69 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tomato Admin Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>🍅 Коллекция томатов</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 h-screen flex overflow-hidden">
-    <div class="w-1/3 bg-white border-r flex flex-col">
-        <div class="p-4 border-b space-y-3">
-            <h2 class="text-xl font-bold text-red-600 font-mono">🍅 TOMATO CRM</h2>
-            <input type="text" id="searchInput" placeholder="Поиск..." class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-red-500">
-        </div>
-        <div id="productList" class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50">
-            </div>
-    </div>
 
-    <div class="flex-1 overflow-y-auto p-10 bg-white">
-        <div class="max-w-xl mx-auto border p-8 rounded-3xl shadow-sm">
-             <h1 id="formTitle" class="text-2xl font-bold mb-6 text-gray-800">Добавить новый сорт</h1>
-             <form id="productForm" class="space-y-4">
-                <input type="text" id="title" placeholder="Название томата" class="w-full p-3 border rounded-xl" required>
-                <div class="grid grid-cols-2 gap-4">
-                    <select id="category" class="w-full p-3 border rounded-xl">
-                        <option value="Dwarf">Гном (Dwarf)</option>
-                        <option value="Indet">Высокий</option>
-                        <option value="Det">Низкий</option>
-                    </select>
-                    <input type="text" id="price" placeholder="Цена" class="w-full p-3 border rounded-xl">
-                </div>
-                <textarea id="description" placeholder="Описание..." class="w-full p-3 border rounded-xl h-32"></textarea>
-                <input type="text" id="tags" placeholder="Теги..." class="w-full p-3 border rounded-xl">
-                <div class="p-4 bg-gray-50 rounded-xl space-y-2 border border-dashed">
-                    <input type="text" id="prop_term" placeholder="Срок" class="w-full p-2 border rounded-lg text-sm">
-                    <input type="text" id="prop_height" placeholder="Высота" class="w-full p-2 border rounded-lg text-sm">
-                    <input type="text" id="prop_weight" placeholder="Вес" class="w-full p-2 border rounded-lg text-sm">
-                </div>
-                <div class="border p-3 rounded-xl">
-                    <input type="file" id="imageUpload" class="w-full text-sm">
-                </div>
-                <button type="submit" id="submitBtn" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold hover:bg-red-700 transition">🚀 Сохранить</button>
-             </form>
-        </div>
-    </div>
+<body class="bg-[#faf7f2] h-screen flex font-sans text-gray-800">
 
-    <script src="new.js"></script>
+<!-- ЛЕВАЯ ПАНЕЛЬ -->
+<aside class="w-1/3 bg-white border-r p-5 flex flex-col">
+  <h1 class="text-2xl font-bold text-red-600 mb-4">🍅 Моя коллекция</h1>
+
+  <input id="searchInput"
+    placeholder="Поиск сорта…"
+    class="mb-3 p-3 rounded-xl border text-lg focus:ring-2 focus:ring-red-400">
+
+  <select id="filterCategory"
+    class="mb-3 p-3 rounded-xl border text-lg">
+    <option value="">🌱 Все сорта</option>
+    <option value="Dwarf">Гном</option>
+    <option value="Det">Низкий</option>
+    <option value="Indet">Высокий</option>
+  </select>
+
+  <div id="countInfo" class="text-sm text-gray-500 mb-3"></div>
+
+  <div id="productList" class="space-y-2 overflow-y-auto"></div>
+</aside>
+
+<!-- ПРАВАЯ ПАНЕЛЬ -->
+<main class="flex-1 p-10 overflow-y-auto">
+  <div class="max-w-xl bg-white rounded-3xl p-8 shadow">
+
+    <h2 id="formTitle" class="text-2xl font-bold mb-6">➕ Новый сорт</h2>
+
+    <form id="productForm" class="space-y-4 text-lg">
+      <input id="title" placeholder="Название сорта"
+        class="w-full p-3 rounded-xl border">
+
+      <select id="category"
+        class="w-full p-3 rounded-xl border">
+        <option value="Dwarf">Гном</option>
+        <option value="Det">Низкий</option>
+        <option value="Indet">Высокий</option>
+      </select>
+
+      <textarea id="description"
+        placeholder="Описание сорта"
+        class="w-full p-3 rounded-xl border h-32"></textarea>
+
+      <div class="grid grid-cols-3 gap-3">
+        <input id="prop_term" placeholder="Срок" class="p-2 border rounded-xl">
+        <input id="prop_height" placeholder="Высота" class="p-2 border rounded-xl">
+        <input id="prop_weight" placeholder="Вес" class="p-2 border rounded-xl">
+      </div>
+
+      <button id="submitBtn"
+        class="w-full bg-red-600 text-white py-4 rounded-xl text-xl font-bold hover:bg-red-700">
+        💾 Сохранить сорт
+      </button>
+    </form>
+  </div>
+</main>
+
+<script src="new.js"></script>
 </body>
 </html>
