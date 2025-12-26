@@ -4,7 +4,6 @@
   let allProducts = [];
   let editId = null;
 
-  /* ===== УДОБНЫЙ ДОСТУП К ЭЛЕМЕНТАМ ===== */
   const $ = id => document.getElementById(id);
 
   const productList   = $('productList');
@@ -24,74 +23,44 @@
   const toast         = $('toast');
   const searchInput   = $('searchInput');
 
-  if (!productForm || !productList || !titleInput) {
-    console.error('❌ Критические элементы не найдены');
-    return;
-  }
-
-  /* ===== SLUG ===== */
   const slug = t =>
-    t.toLowerCase()
-      .replace(/ё/g, 'е')
-      .replace(/[^a-zа-я0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    t.toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]+/g,'-').replace(/^-+|-+$/g,'');
 
-  /* ===== УВЕДОМЛЕНИЯ ===== */
-  function showToast(text, ok = true) {
-    if (!toast) {
-      alert(text);
-      return;
-    }
+  function notify(text, ok = true) {
+    if (!toast) { alert(text); return; }
     toast.innerText = text;
     toast.className =
       `fixed bottom-5 right-5 px-6 py-4 rounded-xl text-white text-lg shadow-lg ${
         ok ? 'bg-green-600' : 'bg-red-600'
       }`;
     toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
+    setTimeout(() => toast.classList.add('hidden'), 2500);
   }
 
-  /* ===== ЗАГРУЗКА СПИСКА ===== */
   async function loadProducts(highlightId = null) {
-    try {
-      const res = await fetch('/api/admin/get-products');
-      allProducts = await res.json();
+    const res = await fetch('/api/admin/get-products');
+    allProducts = await res.json();
 
-      productList.innerHTML = allProducts.map(p => `
-        <div class="p-2 border rounded-xl flex items-center gap-3
-          ${p.id === highlightId ? 'bg-green-50 border-green-400' : 'bg-white'}">
+    productList.innerHTML = allProducts.map(p => `
+      <div class="p-2 border rounded-xl flex items-center gap-3
+        ${p.id === highlightId ? 'bg-green-50 border-green-400' : 'bg-white'}">
 
-          <!-- ФОТО -->
-          <img
-            src="${p.images || 'https://via.placeholder.com/48x48?text=🍅'}"
-            class="w-12 h-12 rounded-lg object-cover border"
-          >
+        <img
+          src="${p.images || 'https://via.placeholder.com/48x48?text=🍅'}"
+          class="w-12 h-12 rounded-lg object-cover border">
 
-          <!-- НАЗВАНИЕ -->
-          <div class="flex-1 truncate">
-            <div class="font-semibold text-sm">${p.title}</div>
-            <div class="text-xs text-gray-500">${p.category || ''}</div>
-          </div>
-
-          <!-- КНОПКИ -->
-          <div class="flex gap-2">
-            <button onclick="window.__editProduct('${p.id}')"
-              title="Редактировать"
-              class="text-lg">✏️</button>
-
-            <button onclick="window.__deleteProduct('${p.id}')"
-              title="Удалить"
-              class="text-lg">🗑</button>
-          </div>
+        <div class="flex-1 truncate">
+          <div class="font-semibold text-sm">${p.title}</div>
+          <div class="text-xs text-gray-500">${p.category || ''}</div>
         </div>
-      `).join('');
-    } catch (e) {
-      showToast('❌ Ошибка загрузки списка', false);
-    }
+
+        <button onclick="window.__edit('${p.id}')" title="Редактировать">✏️</button>
+        <button onclick="window.__delete('${p.id}')" title="Удалить">🗑</button>
+      </div>
+    `).join('');
   }
 
-  /* ===== РЕДАКТИРОВАНИЕ ===== */
-  window.__editProduct = function (id) {
+  window.__edit = id => {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
 
@@ -105,8 +74,8 @@
     descInput.value     = p.description || '';
 
     const map = {};
-    (p.props || '').split(';').forEach(i => {
-      const [k, v] = i.split('=');
+    (p.props || '').split(';').forEach(x => {
+      const [k,v] = x.split('=');
       if (k) map[k] = v;
     });
 
@@ -122,9 +91,72 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  /* ===== УДАЛЕНИЕ ===== */
-  window.__deleteProduct = async function (id) {
+  window.__delete = async id => {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
 
-    const ok = confirm(`Удалить сорт:\n\n"${p.title}" ?\n\nЭто действие
+    if (!confirm(`Удалить сорт:\n\n${p.title}\n\nБезвозвратно?`)) return;
+
+    await fetch('/api/admin/delete-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: SECRET, id })
+    });
+
+    notify('🗑 Сорт удалён');
+    if (editId === id) {
+      productForm.reset();
+      if (imagePreview) imagePreview.classList.add('hidden');
+      editId = null;
+      if (formTitle) formTitle.innerText = '➕ Новый сорт';
+    }
+    loadProducts();
+  };
+
+  if (imageUpload && imagePreview) {
+    imageUpload.onchange = () => {
+      const f = imageUpload.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = e => {
+        imagePreview.src = e.target.result;
+        imagePreview.classList.remove('hidden');
+      };
+      r.readAsDataURL(f);
+    };
+  }
+
+  productForm.onsubmit = async e => {
+    e.preventDefault();
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = '⏳ Сохраняем…';
+    }
+
+    let imageUrl = '';
+    if (imageUpload && imageUpload.files[0]) {
+      const up = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: {
+          'x-filename': encodeURIComponent(imageUpload.files[0].name),
+          'x-admin-password': SECRET
+        },
+        body: imageUpload.files[0]
+      });
+      imageUrl = (await up.json()).url;
+    } else if (editId) {
+      imageUrl = allProducts.find(p => p.id === editId)?.images || '';
+    }
+
+    const props =
+      `Срок=${propTerm.value};` +
+      `Высота=${propHeight.value};` +
+      `Вес=${propWeight.value}`;
+
+    await fetch('/api/admin/add-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        password: SECRET,
+        id: editId
