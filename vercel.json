@@ -1,9 +1,15 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/new/khvalla74", "destination": "/new.html" },
-    { "source": "/new.js", "destination": "/new.js" }
+    {
+      "source": "/api/admin/:path*",
+      "destination": "/api/admin/:path*"
+    },
+    {
+      "source": "/new/khvalla74",
+      "destination": "/new.html"
+    }
   ]
 }
