@@ -1,93 +1,50 @@
-let allProducts = [];
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 
-// Функция транслитерации для ID
-function createSlug(text) {
-    const translit = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'c','ч':'ch','ш':'sh','щ':'shh','ы':'y','э':'e','ю':'yu','я':'ya',' ':'-'};
-    return text.toLowerCase().split('').map(char => translit[char] || char).join('').replace(/[^a-z0-9-]/g, '');
-}
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  const { password, id, title, category, price, description, tags, images, props } = req.body;
 
-// Загрузка списка томатов
-async function loadProducts() {
-    try {
-        const res = await fetch('/api/admin/get-products');
-        allProducts = await res.json();
-        renderProducts(allProducts);
-    } catch (err) {
-        console.error("Ошибка загрузки списка");
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return res.status(403).json({ error: 'Wrong password' });
+  }
+
+  try {
+    const auth = new JWT({
+      email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+      key: process.env.GOOGLE_SHEETS_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_SPREADSHEET_ID, auth);
+    await doc.loadInfo();
+    const sheet = doc.sheetsByIndex[0];
+    const rows = await sheet.getRows();
+
+    // Ищем, есть ли уже товар с таким ID
+    const existingRow = rows.find(r => r.get('id') === id);
+
+    const data = {
+      id, title, category,
+      price: price || "",
+      images: images || "",
+      tags: tags || "",
+      description: description || "",
+      stock: "TRUE",
+      props: props || ""
+    };
+
+    if (existingRow) {
+      // ОБНОВЛЯЕМ существующую строку
+      Object.assign(existingRow, data);
+      await existingRow.save();
+    } else {
+      // ДОБАВЛЯЕМ новую строку
+      await sheet.addRow(data);
     }
+
+    return res.status(200).json({ success: true, mode: existingRow ? 'updated' : 'added' });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 }
-
-// Отрисовка списка в левой колонке
-function renderProducts(list) {
-    const container = document.getElementById('productList');
-    container.innerHTML = list.map(p => `
-        <div class="p-3 border rounded-xl hover:bg-gray-50 flex justify-between items-center transition bg-white shadow-sm">
-            <div>
-                <div class="font-bold text-sm">${p.title}</div>
-                <div class="text-xs text-gray-400">${p.category}</div>
-            </div>
-            <button onclick="editProduct('${p.id}')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded border">Редакт.</button>
-        </div>
-    `).join('');
-}
-
-// Поиск
-document.getElementById('searchInput').addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase();
-    const filtered = allProducts.filter(p => p.title.toLowerCase().includes(term));
-    renderProducts(filtered);
-});
-
-// Заглушка для редактирования (пока просто уведомление)
-function editProduct(id) {
-    alert('Функция редактирования ID: ' + id + ' будет добавлена на следующем этапе. Сейчас данные можно только добавлять.');
-}
-
-// Сохранение формы
-document.getElementById('productForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.innerText = '⌛ Сохранение...';
-
-    const title = document.getElementById('title').value;
-    const file = document.getElementById('imageUpload').files[0];
-    let imageUrl = '';
-
-    try {
-        if (file) {
-            const up = await fetch('/api/admin/upload', {
-                method: 'POST', body: file, headers: { 'x-filename': encodeURI(file.name) }
-            });
-            const res = await up.json();
-            imageUrl = res.url;
-        }
-
-        const props = `Срок=${document.getElementById('prop_term').value};Высота=${document.getElementById('prop_height').value};Вес=${document.getElementById('prop_weight').value}`;
-
-        const res = await fetch('/api/admin/add-product', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: document.getElementById('adminPassword').value,
-                id: createSlug(title),
-                title: title,
-                category: document.getElementById('category').value,
-                price: document.getElementById('price').value,
-                description: document.getElementById('description').value,
-                tags: document.getElementById('tags').value,
-                props: props,
-                images: imageUrl
-            })
-        });
-
-        if (res.ok) { 
-            alert('✅ Успешно сохранено!'); 
-            loadProducts(); // Обновляем список слева
-            e.target.reset(); 
-        } else { alert('❌ Ошибка!'); }
-    } catch (err) { alert('❌ Ошибка сети'); }
-    finally { btn.disabled = false; btn.innerText = '🚀 Сохранить в таблицу'; }
-});
-
-// Запускаем загрузку при старте
-loadProducts();
