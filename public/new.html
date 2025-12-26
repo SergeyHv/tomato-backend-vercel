@@ -2,23 +2,40 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Админка Томатов</title>
+    <title>Добавить Томат | Tomato</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-8">
-    <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-lg">
-        <h1 class="text-2xl font-bold mb-4">Добавить новый сорт</h1>
+<body class="bg-gray-50 p-6">
+    <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-sm border">
+        <h1 class="text-2xl font-bold mb-6 text-red-600">🍅 Новый сорт в каталог</h1>
         <form id="productForm" class="space-y-4">
-            <input type="password" id="adminPassword" placeholder="Пароль" class="w-full p-2 border rounded" required>
-            <input type="text" id="title" placeholder="Название томата" class="w-full p-2 border rounded" required>
-            <input type="text" id="category" placeholder="Категория" class="w-full p-2 border rounded">
-            <input type="text" id="price" placeholder="Цена (например 1.5)" class="w-full p-2 border rounded">
-            <textarea id="description" placeholder="Описание" class="w-full p-2 border rounded"></textarea>
-            <input type="text" id="tags" placeholder="Теги (через запятую)" class="w-full p-2 border rounded">
-            <input type="text" id="props" placeholder="Характеристики (высота, вес)" class="w-full p-2 border rounded">
-            <input type="file" id="imageUpload" class="w-full">
-            <div id="preview"></div>
-            <button type="submit" class="w-full bg-red-500 text-white py-3 rounded-lg font-bold">🚀 Опубликовать</button>
+            <input type="password" id="adminPassword" placeholder="Пароль администратора" class="w-full p-3 border rounded-xl" required>
+            
+            <input type="text" id="title" placeholder="Название (напр. Гном Малиновый Берет)" class="w-full p-3 border rounded-xl" required>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <select id="category" class="w-full p-3 border rounded-xl bg-white">
+                    <option value="Dwarf">Гном (Dwarf)</option>
+                    <option value="Indet">Высокий (Indet)</option>
+                    <option value="Det">Низкий (Det)</option>
+                </select>
+                <input type="text" id="price" placeholder="Цена (пусто = 1.5)" class="w-full p-3 border rounded-xl">
+            </div>
+
+            <textarea id="description" placeholder="Описание для дачниц..." class="w-full p-3 border rounded-xl h-24"></textarea>
+            
+            <input type="text" id="tags" placeholder="Теги через запятую (Сладкий, Крупный...)" class="w-full p-3 border rounded-xl">
+            
+            <div class="p-4 bg-gray-100 rounded-xl space-y-2">
+                <p class="text-sm font-bold text-gray-600">Характеристики (Props):</p>
+                <input type="text" id="prop_term" placeholder="Срок (напр. Ранний)" class="w-full p-2 border rounded-lg text-sm">
+                <input type="text" id="prop_height" placeholder="Высота (напр. 1.2м)" class="w-full p-2 border rounded-lg text-sm">
+                <input type="text" id="prop_weight" placeholder="Вес (напр. 200г)" class="w-full p-2 border rounded-lg text-sm">
+            </div>
+
+            <input type="file" id="imageUpload" class="w-full text-sm">
+            
+            <button type="submit" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700 transition">🚀 Опубликовать</button>
         </form>
     </div>
     <script src="new.js"></script>
