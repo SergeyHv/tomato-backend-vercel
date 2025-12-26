@@ -2,14 +2,17 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Управление каталогом | Tomato</title>
+    <title>Управление Tomato | khvalla74</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 h-screen flex overflow-hidden">
 
     <div class="w-1/3 bg-white border-r flex flex-col">
         <div class="p-4 border-b space-y-3">
-            <h2 class="text-xl font-bold text-red-600">🍅 Мои сорта</h2>
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-red-600">🍅 Мои сорта</h2>
+                <span id="statusAuth" class="text-[10px] bg-green-100 text-green-600 px-2 py-1 rounded-full uppercase font-bold">Admin Mode</span>
+            </div>
             <input type="text" id="searchInput" placeholder="Поиск сорта..." class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
         </div>
         <div id="productList" class="flex-1 overflow-y-auto p-2 space-y-2">
@@ -21,8 +24,6 @@
         <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-sm border">
             <h1 id="formTitle" class="text-2xl font-bold mb-6 text-gray-800">Добавить новый сорт</h1>
             <form id="productForm" class="space-y-4">
-                <input type="password" id="adminPassword" placeholder="Пароль администратора" class="w-full p-3 border rounded-xl bg-yellow-50" required>
-                
                 <input type="text" id="title" placeholder="Название томата" class="w-full p-3 border rounded-xl" required>
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -35,7 +36,6 @@
                 </div>
 
                 <textarea id="description" placeholder="Описание для дачниц..." class="w-full p-3 border rounded-xl h-24"></textarea>
-                
                 <input type="text" id="tags" placeholder="Теги (Сладкий, Крупный...)" class="w-full p-3 border rounded-xl">
                 
                 <div class="p-4 bg-gray-50 rounded-xl space-y-2 border border-dashed">
@@ -55,6 +55,6 @@
         </div>
     </div>
 
-    <script src="new.js"></script>
+    <script src="/new.js"></script>
 </body>
 </html>
