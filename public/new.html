@@ -1,4 +1,88 @@
-id	title	price	images	category	tags	description	stock	props
-3476-ot-zuzi	3476 от Zuzi		https://29idrg4kalgzmepn.public.blob.vercel-storage.com/3476-ot-zuzi.jpg	Indet	Ранний, Для теплиц, Редкий	Уникальный коллекционный сорт. Плоды очень сладкие, плотные. Идеален для свежих салатов и консервации.	TRUE	Срок=Ранний; Высота=120см; Вес=30г
-gnom-malinovyj-beret	Гном Малиновый берет		https://29idrg4kalgzmepn.public.blob.vercel-storage.com/products/3476-%25D0%25BE%25D1%2582-%25D0%25B7%25D1%2583%25D0%25B7%25D0%25B8.jpg	Dwarf	сладкий, крупный	супер томат	TRUE	Срок=ранний;Высота=1.2;Вес=200г
-								
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>🍅 Коллекция томатов</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#faf7f2] h-screen flex text-gray-800">
+
+<!-- ЛЕВАЯ ПАНЕЛЬ -->
+<aside class="w-1/3 bg-white border-r p-5 flex flex-col">
+  <h1 class="text-2xl font-bold text-red-600 mb-4">🍅 Коллекция томатов</h1>
+
+  <input id="searchInput"
+    placeholder="🔍 Поиск по названию"
+    class="mb-3 p-3 rounded-xl border text-lg">
+
+  <select id="filterCategory"
+    class="mb-3 p-3 rounded-xl border text-lg">
+    <option value="">🌱 Все сорта</option>
+    <option value="Dwarf">Гном</option>
+    <option value="Det">Низкий</option>
+    <option value="Indet">Высокий</option>
+  </select>
+
+  <div id="countInfo" class="text-sm text-gray-500 mb-3"></div>
+
+  <div id="productList" class="space-y-2 overflow-y-auto"></div>
+</aside>
+
+<!-- ПРАВАЯ ПАНЕЛЬ -->
+<main class="flex-1 p-10 overflow-y-auto">
+  <div class="max-w-xl bg-white rounded-3xl p-8 shadow">
+
+    <h2 id="formTitle" class="text-2xl font-bold mb-6">➕ Новый сорт</h2>
+
+    <form id="productForm" class="space-y-4 text-lg">
+
+      <input id="title" placeholder="Название сорта"
+        class="w-full p-3 rounded-xl border" required>
+
+      <select id="category"
+        class="w-full p-3 rounded-xl border">
+        <option value="Dwarf">Гном</option>
+        <option value="Det">Низкий</option>
+        <option value="Indet">Высокий</option>
+      </select>
+
+      <input id="price" placeholder="Цена (если нужна)"
+        class="w-full p-3 rounded-xl border">
+
+      <input id="tags" placeholder="Особенности (через запятую)"
+        class="w-full p-3 rounded-xl border">
+
+      <textarea id="description"
+        placeholder="Описание сорта"
+        class="w-full p-3 rounded-xl border h-28"></textarea>
+
+      <!-- ХАРАКТЕРИСТИКИ -->
+      <div class="bg-gray-50 p-4 rounded-xl space-y-3">
+        <h3 class="font-bold">🌱 Характеристики</h3>
+        <input id="prop_term" placeholder="Срок созревания (Ранний)"
+          class="w-full p-2 border rounded-xl">
+        <input id="prop_height" placeholder="Высота растения (120см)"
+          class="w-full p-2 border rounded-xl">
+        <input id="prop_weight" placeholder="Вес плода (30г)"
+          class="w-full p-2 border rounded-xl">
+      </div>
+
+      <!-- НАЛИЧИЕ -->
+      <label class="flex items-center gap-3 text-lg">
+        <input type="checkbox" id="stock" checked>
+        Есть в наличии
+      </label>
+
+      <button
+        class="w-full bg-red-600 text-white py-4 rounded-xl text-xl font-bold hover:bg-red-700">
+        💾 Сохранить сорт
+      </button>
+
+    </form>
+  </div>
+</main>
+
+<script src="new.js"></script>
+</body>
+</html>
