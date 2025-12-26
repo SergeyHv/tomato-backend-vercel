@@ -21,12 +21,12 @@ export default async function handler(req, res) {
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getRows();
 
-    // Ищем, есть ли уже товар с таким ID
+    // Поиск существующей строки по ID
     const existingRow = rows.find(r => r.get('id') === id);
 
-    const data = {
+    const rowData = {
       id, title, category,
-      price: price || "",
+      price: price || "1.5",
       images: images || "",
       tags: tags || "",
       description: description || "",
@@ -35,12 +35,10 @@ export default async function handler(req, res) {
     };
 
     if (existingRow) {
-      // ОБНОВЛЯЕМ существующую строку
-      Object.assign(existingRow, data);
+      Object.assign(existingRow, rowData);
       await existingRow.save();
     } else {
-      // ДОБАВЛЯЕМ новую строку
-      await sheet.addRow(data);
+      await sheet.addRow(rowData);
     }
 
     return res.status(200).json({ success: true, mode: existingRow ? 'updated' : 'added' });
