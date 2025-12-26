@@ -17,8 +17,12 @@ export default async function handler(req, res) {
     const products = rows.map(row => ({
       id: row.get('id') || '',
       title: row.get('title') || '',
+      price: row.get('price') || '',
+      images: row.get('images') || '',
       category: row.get('category') || '',
-      stock: row.get('stock') || ''
+      tags: row.get('tags') || '',
+      description: row.get('description') || '',
+      props: row.get('props') || ''
     }));
 
     return res.status(200).json(products);
