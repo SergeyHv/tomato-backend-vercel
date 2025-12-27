@@ -20,7 +20,6 @@
   const submitBtn     = $('submitBtn');
   const formTitle     = $('formTitle');
   const toast         = $('toast');
-  const searchInput   = $('searchInput');
 
   const slug = t =>
     t.toLowerCase()
@@ -46,17 +45,16 @@
     if (formTitle) formTitle.innerText = '➕ Новый сорт';
   }
 
-  async function loadProducts(highlightId = null) {
+  async function loadProducts() {
     const res = await fetch('/api/admin/get-products');
     allProducts = await res.json();
 
     productList.innerHTML = allProducts.map(p => `
-      <div class="p-2 border rounded-xl flex items-center gap-3 bg-white
-        ${p.id === highlightId ? 'bg-green-50 border-green-400' : ''}">
+      <div class="p-2 border rounded-xl flex items-center gap-3 bg-white">
 
-        <img
-          src="${p.images || 'https://via.placeholder.com/48x48?text=🍅'}"
-          class="w-12 h-12 rounded-lg object-cover border">
+        <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-xl">
+          ${p.images ? `<img src="${p.images}" class="w-12 h-12 rounded-lg object-cover">` : '🍅'}
+        </div>
 
         <div class="flex-1 truncate">
           <div class="font-semibold text-sm">${p.title}</div>
@@ -96,8 +94,6 @@
       imagePreview.src = p.images;
       imagePreview.classList.remove('hidden');
     }
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   window.del = async id => {
@@ -112,7 +108,7 @@
     });
 
     toastMsg('🗑 Сорт удалён');
-    if (editId === id) resetForm();
+    resetForm();
     loadProducts();
   };
 
@@ -141,9 +137,7 @@
       }
 
       const props =
-        `Срок=${propTerm.value};` +
-        `Высота=${propHeight.value};` +
-        `Вес=${propWeight.value}`;
+        `Срок=${propTerm.value};Высота=${propHeight.value};Вес=${propWeight.value}`;
 
       const savedId = editId || slug(titleInput.value);
 
@@ -165,7 +159,7 @@
 
       toastMsg(editId ? '✅ Сорт обновлён' : '✅ Сорт добавлен');
       resetForm();
-      loadProducts(savedId);
+      loadProducts();
 
     } catch (err) {
       console.error(err);
