@@ -22,12 +22,23 @@
   const submitBtn     = $('submitBtn');
   const formTitle     = $('formTitle');
 
-  /* ===== SLUG (ТОЛЬКО ДЛЯ НОВЫХ) ===== */
-  const slug = t =>
-    t.toLowerCase()
-     .replace(/ё/g, 'е')
-     .replace(/[^a-z0-9]+/g, '-')
-     .replace(/^-+|-+$/g, '');
+  /* ===== НОРМАЛЬНАЯ ТРАНСЛИТЕРАЦИЯ ===== */
+  const translit = str => {
+    const map = {
+      а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',
+      и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',
+      р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',
+      ч:'ch',ш:'sh',щ:'sch',ы:'y',э:'e',ю:'yu',я:'ya'
+    };
+
+    return str
+      .toLowerCase()
+      .split('')
+      .map(ch => map[ch] || ch)
+      .join('')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
 
   function resetForm() {
     editId = null;
@@ -45,9 +56,7 @@
     productList.innerHTML = allProducts.map(p => `
       <div class="p-2 border rounded-xl flex items-center gap-3 bg-white">
         <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-          ${p.images
-            ? `<img src="${p.images}" class="w-12 h-12 rounded-lg object-cover">`
-            : '🍅'}
+          ${p.images ? `<img src="${p.images}" class="w-12 h-12 rounded-lg object-cover">` : '🍅'}
         </div>
         <div class="flex-1 truncate">
           <div class="font-semibold text-sm">${p.title}</div>
@@ -68,15 +77,15 @@
 
     formTitle.innerText = '✏️ Редактирование сорта';
 
-    titleInput.value = p.title || '';
-    categoryInput.value = p.category || '';
-    priceInput.value = p.price || '';
-    tagsInput.value = p.tags || '';
-    descInput.value = p.description || '';
+    titleInput.value = p.title;
+    categoryInput.value = p.category;
+    priceInput.value = p.price;
+    tagsInput.value = p.tags;
+    descInput.value = p.description;
 
     const map = {};
     (p.props || '').split(';').forEach(x => {
-      const [k, v] = x.split('=');
+      const [k,v] = x.split('=');
       if (k) map[k] = v;
     });
 
@@ -108,30 +117,17 @@
   productForm.onsubmit = async e => {
     e.preventDefault();
 
+    if (!titleInput.value.trim()) {
+      alert('Введите название сорта');
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.innerText = '⏳ Сохраняем…';
 
     try {
-      /* ===== ID: ЖЁСТКАЯ ЛОГИКА ===== */
-      let id;
+      const id = editId || translit(titleInput.value);
 
-      if (editId) {
-        // 🔒 редактирование — ID ТОЛЬКО из таблицы
-        id = editId;
-      } else {
-        // ➕ новый сорт — генерируем
-        id = slug(titleInput.value);
-
-        // 🚫 защита от кириллицы
-        if (!/^[a-z0-9-]+$/.test(id)) {
-          alert('Ошибка: ID должен быть латиницей');
-          submitBtn.disabled = false;
-          submitBtn.innerText = '💾 Сохранить сорт';
-          return;
-        }
-      }
-
-      /* ===== ФОТО ===== */
       let imageUrl = '';
 
       if (imageBase64) {
@@ -143,45 +139,11 @@
             base64: imageBase64
           })
         });
-
-        const r = await up.json();
-        imageUrl = r.url;
+        imageUrl = (await up.json()).url;
       } else if (editId) {
         imageUrl = allProducts.find(p => p.id === editId)?.images || '';
       }
 
       const props =
         `Срок=${propTerm.value};` +
-        `Высота=${propHeight.value};` +
-        `Вес=${propWeight.value}`;
-
-      await fetch('/api/admin/add-product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id,
-          title: titleInput.value,
-          price: priceInput.value,
-          images: imageUrl,
-          category: categoryInput.value,
-          tags: tagsInput.value,
-          description: descInput.value,
-          stock: 'TRUE',
-          props
-        })
-      });
-
-      resetForm();
-      loadProducts();
-
-    } catch (err) {
-      console.error(err);
-      alert('Ошибка сохранения');
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerText = '💾 Сохранить сорт';
-    }
-  };
-
-  loadProducts();
-})();
+        `Высота=${propHeight.value
