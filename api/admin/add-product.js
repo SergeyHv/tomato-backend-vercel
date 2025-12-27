@@ -16,13 +16,11 @@ function checkAuth(req) {
 }
 
 export default async function handler(req, res) {
-  /* ===== AUTH FIRST ===== */
   if (!checkAuth(req)) {
     res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
     return res.status(401).end('Unauthorized');
   }
 
-  /* ===== METHOD CHECK ===== */
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POST only' });
   }
@@ -34,7 +32,7 @@ export default async function handler(req, res) {
     price,
     description,
     tags,
-    images,
+    images,   // ⚠️ может быть ""
     stock,
     props
   } = req.body;
@@ -57,12 +55,11 @@ export default async function handler(req, res) {
 
     const existingRow = rows.find(r => r.get('id') === id);
 
-    const rowData = {
+    const baseData = {
       id,
       title,
       category,
       price: price || '',
-      images: images || '',
       tags: tags || '',
       description: description || '',
       stock: stock || 'TRUE',
@@ -70,16 +67,25 @@ export default async function handler(req, res) {
     };
 
     if (existingRow) {
-      Object.assign(existingRow, rowData);
+      // 🔒 ВАЖНО: images обновляем ТОЛЬКО если оно реально пришло
+      Object.assign(existingRow, baseData);
+
+      if (images && images.trim() !== '') {
+        existingRow.images = images;
+      }
+
       await existingRow.save();
-    } else {
-      await sheet.addRow(rowData);
+
+      return res.status(200).json({ success: true, mode: 'updated' });
     }
 
-    return res.status(200).json({
-      success: true,
-      mode: existingRow ? 'updated' : 'added'
+    // ➕ новый сорт — images пишем как есть
+    await sheet.addRow({
+      ...baseData,
+      images: images || ''
     });
+
+    return res.status(200).json({ success: true, mode: 'added' });
 
   } catch (error) {
     console.error(error);
