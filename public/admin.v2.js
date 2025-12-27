@@ -1,5 +1,4 @@
 (function () {
-  const SECRET = 'khvalla74';
 
   let allProducts = [];
   let editId = null;
@@ -130,7 +129,6 @@
           method: 'POST',
           headers: {
             'x-filename': encodeURIComponent(imageUpload.files[0].name),
-            'x-admin-password': SECRET
           },
           body: imageUpload.files[0]
         });
