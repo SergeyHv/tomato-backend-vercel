@@ -23,7 +23,10 @@
   const searchInput   = $('searchInput');
 
   const slug = t =>
-    t.toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    t.toLowerCase()
+     .replace(/ё/g,'е')
+     .replace(/[^a-zа-я0-9]+/g,'-')
+     .replace(/^-+|-+$/g,'');
 
   function toastMsg(text, ok = true) {
     if (!toast) return alert(text);
@@ -36,7 +39,7 @@
     setTimeout(() => toast.classList.add('hidden'), 2000);
   }
 
-  function resetFormToAddMode() {
+  function resetForm() {
     editId = null;
     productForm.reset();
     if (imagePreview) imagePreview.classList.add('hidden');
@@ -105,11 +108,11 @@
     await fetch('/api/admin/delete-product', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: SECRET, id })
+      body: JSON.stringify({ id })
     });
 
     toastMsg('🗑 Сорт удалён');
-    if (editId === id) resetFormToAddMode();
+    if (editId === id) resetForm();
     loadProducts();
   };
 
@@ -128,7 +131,7 @@
         const up = await fetch('/api/admin/upload', {
           method: 'POST',
           headers: {
-            'x-filename': encodeURIComponent(imageUpload.files[0].name),
+            'x-filename': encodeURIComponent(imageUpload.files[0].name)
           },
           body: imageUpload.files[0]
         });
@@ -138,7 +141,9 @@
       }
 
       const props =
-        `Срок=${propTerm.value};Высота=${propHeight.value};Вес=${propWeight.value}`;
+        `Срок=${propTerm.value};` +
+        `Высота=${propHeight.value};` +
+        `Вес=${propWeight.value}`;
 
       const savedId = editId || slug(titleInput.value);
 
@@ -146,7 +151,6 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          password: SECRET,
           id: savedId,
           title: titleInput.value,
           price: priceInput.value,
@@ -160,7 +164,7 @@
       });
 
       toastMsg(editId ? '✅ Сорт обновлён' : '✅ Сорт добавлен');
-      resetFormToAddMode();
+      resetForm();
       loadProducts(savedId);
 
     } catch (err) {
