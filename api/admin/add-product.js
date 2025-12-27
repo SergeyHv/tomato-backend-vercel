@@ -1,21 +1,43 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
+/* ===== BASIC AUTH ===== */
+function checkAuth(req) {
+  const auth = req.headers.authorization || '';
+  if (!auth.startsWith('Basic ')) return false;
+
+  const decoded = Buffer.from(auth.split(' ')[1], 'base64').toString();
+  const [user, pass] = decoded.split(':');
+
+  return (
+    user === process.env.ADMIN_USER &&
+    pass === process.env.ADMIN_PASSWORD
+  );
+}
+
 export default async function handler(req, res) {
+  /* ===== AUTH FIRST ===== */
+  if (!checkAuth(req)) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
+    return res.status(401).end('Unauthorized');
+  }
+
+  /* ===== METHOD CHECK ===== */
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POST only' });
   }
 
-  const { password, id, title, category, price, description, tags, images, props } = req.body;
-
-  // ЕДИНСТВЕННЫЙ ПАРОЛЬ
-  if (password !== 'khvalla74') {
-    return res.status(403).json({ error: 'Wrong password' });
-  }
-
-  if (!id || !title) {
-    return res.status(400).json({ error: 'Missing id or title' });
-  }
+  const {
+    id,
+    title,
+    category,
+    price,
+    description,
+    tags,
+    images,
+    stock,
+    props
+  } = req.body;
 
   try {
     const auth = new JWT({
@@ -24,25 +46,26 @@ export default async function handler(req, res) {
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_SPREADSHEET_ID, auth);
-    await doc.loadInfo();
+    const doc = new GoogleSpreadsheet(
+      process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+      auth
+    );
 
+    await doc.loadInfo();
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getRows();
 
-    const existingRow = rows.find(
-      r => String(r.get('id')).trim() === String(id).trim()
-    );
+    const existingRow = rows.find(r => r.get('id') === id);
 
     const rowData = {
       id,
       title,
-      category: category || '',
-      price: price || '1.5',
+      category,
+      price: price || '',
       images: images || '',
       tags: tags || '',
       description: description || '',
-      stock: 'TRUE',
+      stock: stock || 'TRUE',
       props: props || ''
     };
 
@@ -53,9 +76,13 @@ export default async function handler(req, res) {
       await sheet.addRow(rowData);
     }
 
-    res.status(200).json({ success: true });
+    return res.status(200).json({
+      success: true,
+      mode: existingRow ? 'updated' : 'added'
+    });
 
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
   }
 }
