@@ -2,35 +2,30 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>🍅 Управление коллекцией</title>
+  <title>🍅 Управление томатами</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
-
 <body class="bg-[#faf7f2] min-h-screen text-gray-800">
 <div id="app" class="flex flex-col md:flex-row h-screen overflow-hidden">
 
   <aside class="w-full md:w-1/3 bg-white border-r flex flex-col h-1/2 md:h-full shadow-lg">
-    <div class="p-5 border-b bg-white sticky top-0 z-10">
-      <h1 class="text-2xl font-bold text-red-600 mb-4 flex items-center gap-2">
-        <span>🍅</span> Коллекция
-      </h1>
+    <div class="p-5 border-b sticky top-0 bg-white z-10">
+      <h1 class="text-2xl font-bold text-red-600 mb-4 flex items-center gap-2">🍅 Админка</h1>
       <input v-model="search" placeholder="🔍 Поиск по названию..."
-        class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none transition-all">
+        class="w-full p-3 rounded-xl border focus:ring-2 focus:ring-red-500 outline-none">
     </div>
 
     <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#fdfcfb]">
-      <div v-if="filtered.length === 0" class="text-center text-gray-400 mt-10">Ничего не найдено</div>
-      
       <div v-for="p in filtered" :key="p.id"
-        class="p-3 border rounded-2xl flex items-center gap-4 bg-white hover:shadow-md transition-shadow group">
+        class="p-3 border rounded-2xl flex items-center gap-4 bg-white hover:shadow-md transition-all group">
         <img :src="p.images || 'https://via.placeholder.com/150'" class="w-14 h-14 rounded-xl object-cover border">
         <div class="flex-1 min-w-0">
           <div class="font-bold truncate">{{ p.title }}</div>
-          <div class="text-xs text-gray-400 uppercase tracking-wider">{{ p.category }}</div>
+          <div class="text-xs text-gray-400 uppercase">{{ p.category }}</div>
         </div>
-        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div class="flex gap-1">
           <button @click="edit(p)" class="p-2 hover:bg-blue-50 rounded-lg text-blue-500">✏️</button>
           <button @click="remove(p.id)" class="p-2 hover:bg-red-50 rounded-lg text-red-500">🗑</button>
         </div>
@@ -40,50 +35,29 @@
 
   <main class="flex-1 overflow-y-auto p-4 md:p-10 flex justify-center items-start">
     <div class="w-full max-w-xl bg-white rounded-[2rem] p-8 shadow-xl border border-orange-50">
-      <h2 class="text-2xl font-black mb-8 flex items-center gap-3">
-        <span class="bg-red-100 p-2 rounded-xl">{{ editId ? '✏️' : '➕' }}</span>
-        {{ editId ? 'Редактировать сорт' : 'Добавить новый сорт' }}
-      </h2>
+      <h2 class="text-2xl font-black mb-8">{{ editId ? '✏️ Редактирование' : '➕ Новый сорт' }}</h2>
 
       <form @submit.prevent="save" class="space-y-5">
-        <div>
-          <label class="block text-sm font-medium text-gray-500 mb-1 ml-1">Название сорта</label>
-          <input v-model="form.title" required placeholder="Например: Бычье сердце"
-            class="w-full p-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all text-lg">
+        <input v-model="form.title" required placeholder="Название сорта"
+          class="w-full p-4 rounded-2xl border bg-gray-50 focus:bg-white outline-none text-lg">
+
+        <select v-model="form.category" class="w-full p-4 rounded-2xl border bg-gray-50 outline-none text-lg">
+          <option value="Dwarf">Гном (Dwarf)</option>
+          <option value="Det">Низкий (Det)</option>
+          <option value="Indet">Высокий (Indet)</option>
+        </select>
+
+        <div class="border-2 border-dashed border-gray-200 p-4 rounded-2xl text-center">
+          <input type="file" @change="pickImage" accept="image/*" class="mb-2">
+          <img v-if="preview" :src="preview" class="mt-2 w-full h-48 rounded-xl object-cover shadow-md">
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-500 mb-1 ml-1">Тип роста</label>
-          <select v-model="form.category" class="w-full p-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-red-500 outline-none transition-all text-lg appearance-none">
-            <option value="Dwarf">Гном (Dwarf)</option>
-            <option value="Det">Детерминантный (Низкий)</option>
-            <option value="Indet">Индетерминантный (Высокий)</option>
-          </select>
-        </div>
+        <button :disabled="saving"
+          class="w-full bg-red-600 hover:bg-red-700 text-white py-5 rounded-2xl text-xl font-bold shadow-lg transition-all">
+          {{ saving ? '⏳ Сохранение...' : '💾 Сохранить' }}
+        </button>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-500 mb-1 ml-1">Фотография</label>
-          <div class="relative group">
-            <input type="file" @change="pickImage" accept="image/*"
-              class="w-full border-2 border-dashed border-gray-200 p-8 rounded-2xl text-center cursor-pointer hover:border-red-300 transition-colors file:hidden">
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-400 group-hover:text-red-500" v-if="!preview">
-               Нажмите, чтобы выбрать фото
-            </div>
-            <img v-if="preview" :src="preview" class="mt-4 w-full h-64 rounded-2xl object-cover shadow-inner border">
-          </div>
-        </div>
-
-        <div class="pt-4 space-y-3">
-          <button :disabled="saving"
-            class="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white py-5 rounded-2xl text-xl font-bold shadow-lg shadow-red-200 transition-all active:scale-[0.98]">
-            {{ saving ? '⏳ Сохранение...' : '💾 Сохранить в базу' }}
-          </button>
-
-          <button v-if="editId" type="button" @click="cancel"
-            class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-4 rounded-2xl font-semibold transition-all">
-            Отмена
-          </button>
-        </div>
+        <button v-if="editId" type="button" @click="cancel" class="w-full text-gray-400 py-2">Отмена</button>
       </form>
     </div>
   </main>
@@ -91,161 +65,80 @@
 
 <script>
 const { createApp } = Vue;
-
-// Конфиг для легкой смены пароля
-const API_CONFIG = {
-  auth: 'khvalla74'
-};
+const PASS = 'khvalla74';
 
 createApp({
   data() {
     return {
-      products: [],
-      search: '',
-      editId: null,
-      saving: false,
-      preview: '',
-      imageBase64: '',
+      products: [], search: '', editId: null, saving: false,
+      preview: '', imageBase64: '',
       form: { title: '', category: 'Dwarf' }
     };
   },
-
   computed: {
     filtered() {
-      const q = this.search.toLowerCase();
-      return this.products.filter(p => p.title.toLowerCase().includes(q));
+      return this.products.filter(p => p.title.toLowerCase().includes(this.search.toLowerCase()));
     }
   },
-
   methods: {
     async load() {
-      try {
-        const r = await fetch('/api/admin/get-products');
-        if (!r.ok) throw new Error('Ошибка загрузки');
-        this.products = await r.json();
-      } catch (e) {
-        alert('Не удалось загрузить данные: ' + e.message);
-      }
+      const r = await fetch('/api/admin/get-products', {
+        headers: { 'Authorization': 'Basic ' + btoa('admin:' + PASS) }
+      });
+      this.products = await r.json();
     },
-
     edit(p) {
       this.editId = p.id;
-      this.form = { ...p }; // Копируем объект, чтобы не мутировать оригинал сразу
+      this.form = { ...p };
       this.preview = p.images;
-      this.imageBase64 = '';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-
     cancel() {
       this.editId = null;
       this.form = { title: '', category: 'Dwarf' };
-      this.preview = '';
-      this.imageBase64 = '';
+      this.preview = ''; this.imageBase64 = '';
     },
-
     pickImage(e) {
-      const f = e.target.files[0];
-      if (!f) return;
-      
+      const f = e.target.files[0]; if (!f) return;
       const r = new FileReader();
-      r.onload = ev => {
-        this.preview = ev.target.result;
-        this.imageBase64 = ev.target.result;
-      };
+      r.onload = ev => { this.preview = ev.target.result; this.imageBase64 = ev.target.result; };
       r.readAsDataURL(f);
     },
-
     async save() {
-      if (this.saving) return;
       this.saving = true;
-
       try {
         let imageUrl = this.preview;
-
-        // 1. Загрузка картинки, если выбрана новая
         if (this.imageBase64) {
           const up = await fetch('/api/admin/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              filename: `tomato_${Date.now()}.jpg`,
-              base64: this.imageBase64
-            })
+            body: JSON.stringify({ filename: `img_${Date.now()}.jpg`, base64: this.imageBase64 })
           });
-          const uploadRes = await up.json();
-          imageUrl = uploadRes.url;
+          imageUrl = (await up.json()).url;
         }
-
-        // 2. Формируем ID: если редактируем — старый, если новый — уникальный
-        const finalId = this.editId || `t_${Date.now()}`;
-
-        const payload = {
-          password: API_CONFIG.auth,
-          id: finalId,
-          title: this.form.title,
-          category: this.form.category,
-          images: imageUrl
-        };
-
-        const res = await fetch('/api/admin/add-product', {
+        const id = this.editId || `t_${Date.now()}`;
+        await fetch('/api/admin/add-product', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ password: PASS, id, title: this.form.title, category: this.form.category, images: imageUrl })
         });
-
-        if (!res.ok) throw new Error('Сервер отклонил запрос');
-
-        // 3. Обновляем локальный список
-        const newTomato = { ...payload };
-        delete newTomato.password; // Удаляем пароль из локального объекта
-
-        if (this.editId) {
-          const i = this.products.findIndex(p => p.id === finalId);
-          if (i !== -1) this.products[i] = newTomato;
-        } else {
-          this.products.unshift(newTomato);
-        }
-
+        await this.load(); // Полная синхронизация после сохранения
         this.cancel();
-      } catch (e) {
-        alert('Ошибка при сохранении: ' + e.message);
-      } finally {
-        this.saving = false;
-      }
+      } catch (e) { alert('Ошибка сохранения'); }
+      finally { this.saving = false; }
     },
-
     async remove(id) {
-      if (!confirm('Удалить этот сорт?')) return;
-
+      if (!confirm('Удалить?')) return;
       try {
         const res = await fetch('/api/admin/delete-product', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: API_CONFIG.auth, id })
+          body: JSON.stringify({ password: PASS, id })
         });
-        
-        if (res.ok) {
-          this.products = this.products.filter(p => p.id !== id);
-          if (this.editId === id) this.cancel();
-        }
-      } catch (e) {
-        alert('Ошибка при удалении');
-      }
+        if (res.ok) this.products = this.products.filter(p => p.id !== id);
+      } catch (e) { alert('Ошибка удаления'); }
     }
   },
-
-  mounted() {
-    this.load();
-  }
+  mounted() { this.load(); }
 }).mount('#app');
 </script>
-
-<style>
-  /* Кастомный скроллбар для эстетики */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
-</style>
 </body>
 </html>
