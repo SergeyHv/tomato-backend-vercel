@@ -31,14 +31,28 @@ const imagePreview = $('imagePreview');
 const submitBtn = $('submitBtn');
 const formTitle = $('formTitle');
 
-// 🔴 НОВОЕ: кнопка отмены
+// кнопка отмены
 let cancelBtn = null;
 
-// helpers
-const translit = s => s.toLowerCase()
-  .replace(/[^a-z0-9]+/g, '-')
-  .replace(/^-+|-+$/g, '');
+/* ===== ПРАВИЛЬНАЯ ТРАНСЛИТЕРАЦИЯ ===== */
+const translit = str => {
+  const map = {
+    а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',
+    и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',
+    р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',
+    ч:'ch',ш:'sh',щ:'sch',ы:'y',э:'e',ю:'yu',я:'ya'
+  };
 
+  return str
+    .toLowerCase()
+    .split('')
+    .map(ch => map[ch] || ch)
+    .join('')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
+/* ===== UI ===== */
 const ui = {
   render(list) {
     renderDesktop(productListDesktop, list);
@@ -46,26 +60,24 @@ const ui = {
   }
 };
 
-// ===== IMAGE =====
+/* ===== IMAGE ===== */
 bindImageUpload(imageUpload, imagePreview, state);
 
-// ===== CANCEL MODE =====
+/* ===== EXIT EDIT ===== */
 function exitEditMode() {
   state.editId = null;
   state.imageBase64 = '';
   state.imageName = '';
-
   productForm.reset();
   imagePreview.classList.add('hidden');
   formTitle.innerText = '➕ Новый сорт';
-
   if (cancelBtn) {
     cancelBtn.remove();
     cancelBtn = null;
   }
 }
 
-// ===== LIST ACTIONS =====
+/* ===== LIST ===== */
 bindListActions(productListDesktop, {
   onEdit(id) {
     if (isMobile()) return;
@@ -98,14 +110,12 @@ bindListActions(productListDesktop, {
     imagePreview.src = p.images || '';
     imagePreview.classList.remove('hidden');
 
-    // 🔴 НОВОЕ: кнопка "Отмена"
     if (!cancelBtn) {
       cancelBtn = document.createElement('button');
       cancelBtn.type = 'button';
       cancelBtn.innerText = '✖ Отмена';
       cancelBtn.className =
         'w-full mt-2 bg-gray-200 text-gray-800 py-3 rounded-xl text-lg';
-
       cancelBtn.onclick = exitEditMode;
       submitBtn.after(cancelBtn);
     }
@@ -122,7 +132,7 @@ bindListActions(productListDesktop, {
   }
 });
 
-// ===== SAVE =====
+/* ===== SAVE ===== */
 productForm.onsubmit = async e => {
   e.preventDefault();
   submitBtn.disabled = true;
@@ -159,5 +169,5 @@ productForm.onsubmit = async e => {
   submitBtn.innerText = '💾 Сохранить сорт';
 };
 
-// ===== INIT =====
+/* ===== INIT ===== */
 loadAll(state, ui);
