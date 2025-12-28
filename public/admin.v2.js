@@ -7,7 +7,6 @@
 
   const $ = id => document.getElementById(id);
   const isMobile = () => window.innerWidth < 768;
-  const bust = url => url ? `${url}?t=${Date.now()}` : '';
 
   const productListDesktop = $('productList');
   const productListMobile  = $('productListMobile');
@@ -25,6 +24,9 @@
   const imagePreview  = $('imagePreview');
   const submitBtn     = $('submitBtn');
   const formTitle     = $('formTitle');
+  const toast         = $('toast');
+
+  const bust = url => url ? `${url}?t=${Date.now()}` : '';
 
   const translit = str => {
     const map = {
@@ -39,6 +41,15 @@
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
   };
+
+  function showToast(text) {
+    if (!toast) return;
+    toast.innerText = text;
+    toast.className =
+      'fixed bottom-5 right-5 px-6 py-4 rounded-xl text-white text-lg shadow-lg bg-green-600';
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 2500);
+  }
 
   function renderDesktop(list) {
     if (!productListDesktop) return;
@@ -122,6 +133,7 @@
       body: JSON.stringify({ id, password: 'khvalla74' })
     });
     await loadProducts();
+    showToast('Сорт удалён');
   };
 
   imageUpload.addEventListener('change', () => {
@@ -156,6 +168,11 @@
           body: JSON.stringify({ filename: imageName, base64: imageBase64 })
         });
         imageUrl = (await up.json()).url;
+
+        // 🔴 СРАЗУ обновляем превью и локальные данные
+        imagePreview.src = bust(imageUrl);
+        const local = allProducts.find(p => p.id === id);
+        if (local) local.images = imageUrl;
       } else if (editId) {
         imageUrl = allProducts.find(p => p.id === editId)?.images || '';
       }
@@ -180,8 +197,9 @@
         })
       });
 
+      showToast(editId ? 'Фото успешно заменено' : 'Сорт добавлен');
+
       productForm.reset();
-      imagePreview.classList.add('hidden');
       imageBase64 = '';
       imageName = '';
       editId = null;
