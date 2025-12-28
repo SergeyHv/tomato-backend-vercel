@@ -1,31 +1,13 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
-/* ===== BASIC AUTH ===== */
-function checkAuth(req) {
-  const auth = req.headers.authorization || '';
-  if (!auth.startsWith('Basic ')) return false;
-
-  const decoded = Buffer.from(auth.split(' ')[1], 'base64').toString();
-  const [user, pass] = decoded.split(':');
-
-  return (
-    user === process.env.ADMIN_USER &&
-    pass === process.env.ADMIN_PASSWORD
-  );
-}
-
 export default async function handler(req, res) {
-  if (!checkAuth(req)) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).end('Unauthorized');
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POST only' });
   }
 
   const {
+    password,
     id,
     title,
     price,
@@ -36,6 +18,11 @@ export default async function handler(req, res) {
     stock,
     props
   } = req.body;
+
+  // 🔐 ОДИНАКОВАЯ АВТОРИЗАЦИЯ КАК В delete-product
+  if (password !== 'khvalla74') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
 
   try {
     const auth = new JWT({
@@ -67,19 +54,14 @@ export default async function handler(req, res) {
     };
 
     if (existingRow) {
-      // обновляем существующую строку
       Object.assign(existingRow, baseData);
-
-      // images обновляем ТОЛЬКО если пришёл новый URL
-      if (images && images.trim() !== '') {
+      if (images && images.trim()) {
         existingRow.images = images;
       }
-
       await existingRow.save();
       return res.status(200).json({ success: true, mode: 'updated' });
     }
 
-    // добавляем новый сорт
     await sheet.addRow({
       ...baseData,
       images: images || ''
