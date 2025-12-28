@@ -1,9 +1,12 @@
 import { getProducts, saveProduct, deleteProduct, uploadImage } from './api.js';
 
 export async function loadAll(state, ui) {
-  const list = await getProducts();
-  state.allProducts = list;
-  ui.render(list);
+  getProducts()
+    .then(list => {
+      state.allProducts = list;
+      ui.render(list);
+    })
+    .catch(() => {});
 }
 
 export function bindListActions(container, handlers) {
