@@ -2,143 +2,98 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Tomato Admin Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>База Томатов — Supabase</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#f8fafc] min-h-screen font-sans">
-<div id="app" class="flex flex-col md:flex-row h-screen overflow-hidden">
+<body class="bg-slate-50 min-h-screen p-4">
+  <div id="app" class="max-w-4xl mx-auto flex flex-col md:flex-row gap-6">
+    
+    <div class="md:w-1/2 bg-white p-6 rounded-3xl shadow-lg border border-slate-100 h-fit">
+      <h2 class="text-xl font-black mb-4 uppercase tracking-tighter">Добавить сорт</h2>
+      <input v-model="form.title" placeholder="Название томата" class="w-full p-4 bg-slate-50 rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+      
+      <select v-model="form.category" class="w-full p-4 bg-slate-50 rounded-2xl mb-4 outline-none">
+        <option value="Dwarf">Гном (Dwarf)</option>
+        <option value="Det">Низкий (Det)</option>
+        <option value="Indet">Высокий (Indet)</option>
+      </select>
 
-  <aside class="w-full md:w-1/3 bg-white border-r flex flex-col h-1/2 md:h-full shadow-xl">
-    <div class="p-6 border-b sticky top-0 bg-white z-10">
-      <h1 class="text-2xl font-black text-blue-600 mb-4 flex items-center gap-2">🍅 База Томатов</h1>
-      <input v-model="search" placeholder="🔍 Быстрый поиск по базе..."
-        class="w-full p-3 rounded-xl border-2 border-slate-100 focus:border-blue-500 outline-none transition-all">
+      <div class="mb-4">
+        <input type="file" @change="pickImage" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+      </div>
+
+      <button @click="save" :disabled="loading" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50">
+        {{ loading ? '⏳ ЗАГРУЗКА...' : 'СОХРАНИТЬ' }}
+      </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-4 space-y-3">
-      <div v-for="t in filtered" :key="t.id"
-        class="p-4 border border-slate-100 rounded-2xl flex items-center gap-4 bg-white hover:shadow-md transition-all group">
-        <img :src="t.image_url || 'https://via.placeholder.com/100'" class="w-12 h-12 rounded-lg object-cover bg-slate-100">
-        <div class="flex-1 min-w-0">
-          <div class="font-bold truncate text-slate-700">{{ t.title }}</div>
+    <div class="md:w-1/2 space-y-3">
+      <div v-for="t in tomatoes" :key="t.id" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+        <img v-if="t.image_url" :src="t.image_url" class="w-12 h-12 rounded-lg object-cover">
+        <div class="flex-1">
+          <div class="font-bold">{{ t.title }}</div>
           <div class="text-[10px] text-blue-500 font-black uppercase">{{ t.category }}</div>
         </div>
-        <button @click="remove(t.id)" class="p-2 text-red-300 hover:text-red-500 transition-colors text-xl">🗑</button>
+        <button @click="remove(t.id)" class="text-slate-300 hover:text-red-500">🗑</button>
       </div>
     </div>
-  </aside>
 
-  <main class="flex-1 overflow-y-auto p-4 md:p-10 flex justify-center items-start">
-    <div class="w-full max-w-lg bg-white rounded-[2.5rem] p-8 shadow-2xl border border-white">
-      <h2 class="text-3xl font-black mb-8 text-slate-800">Новый сорт</h2>
+  </div>
 
-      <form @submit.prevent="save" class="space-y-6">
-        <div>
-          <label class="text-xs font-bold text-slate-400 uppercase ml-2">Название</label>
-          <input v-model="form.title" required placeholder="Напр: Сержант Пеппер"
-            class="w-full mt-1 p-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none text-lg transition-all">
-        </div>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient('https://elsbyawbmvyvkrvnfeoi.supabase.co', 'sb_publishable_Qa6ghz4rK3-bZURrGJxK3w_Hrj8HzdU');
 
-        <div>
-          <label class="text-xs font-bold text-slate-400 uppercase ml-2">Категория</label>
-          <select v-model="form.category" class="w-full mt-1 p-4 rounded-2xl bg-slate-50 border-2 border-transparent outline-none cursor-pointer">
-            <option value="Dwarf">Гном (Dwarf)</option>
-            <option value="Det">Низкий (Det)</option>
-            <option value="Indet">Высокий (Indet)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-xs font-bold text-slate-400 uppercase ml-2">Фотография</label>
-          <div class="mt-1 border-2 border-dashed border-slate-200 p-8 rounded-[2rem] text-center bg-slate-50 relative overflow-hidden group">
-            <input type="file" @change="pickImage" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-            <div v-if="!preview" class="text-slate-400 text-sm">Выберите фото для загрузки</div>
-            <img v-if="preview" :src="preview" class="absolute inset-0 w-full h-full object-cover group-hover:opacity-50 transition-opacity">
-          </div>
-        </div>
-
-        <button :disabled="loading"
-          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white py-5 rounded-[1.5rem] text-xl font-bold shadow-xl shadow-blue-100 transition-all active:scale-95">
-          {{ loading ? '⏳ СОХРАНЕНИЕ...' : '💾 ДОБАВИТЬ В БАЗУ' }}
-        </button>
-      </form>
-    </div>
-  </main>
-</div>
-
-<script>
-// --- КОНФИГУРАЦИЯ ---
-const SUPABASE_URL = 'https://elsbyawbmvyvkrvnfeoi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Qa6ghz4rK3-bZURrGJxK3w_Hrj8HzdU';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const { createApp } = Vue;
-createApp({
-  data() {
-    return {
-      tomatoes: [], search: '', loading: false,
-      preview: '', file: null,
-      form: { title: '', category: 'Dwarf' }
-    };
-  },
-  computed: {
-    filtered() {
-      return this.tomatoes.filter(t => t.title.toLowerCase().includes(this.search.toLowerCase()));
-    }
-  },
-  methods: {
-    async load() {
-      const { data } = await sb.from('tomatoes').select('*').order('created_at', { ascending: false });
-      this.tomatoes = data || [];
-    },
-    pickImage(e) {
-      const f = e.target.files[0]; if (!f) return;
-      this.file = f;
-      this.preview = URL.createObjectURL(f);
-    },
-    async save() {
-      if (!this.form.title || this.loading) return;
-      this.loading = true;
-
-      try {
-        let imageUrl = '';
-        // 1. Загрузка фото, если оно выбрано
-        if (this.file) {
-          const fName = `${Date.now()}_${this.file.name}`;
-          // Важно: создай Bucket с именем 'tomatoes' в панели Supabase Storage (Public)
-          const { data: upData } = await sb.storage.from('tomatoes').upload(fName, this.file);
-          if (upData) {
-            const { data: urlData } = sb.storage.from('tomatoes').getPublicUrl(fName);
-            imageUrl = urlData.publicUrl;
-          }
+    Vue.createApp({
+      data() {
+        return {
+          tomatoes: [],
+          loading: false,
+          file: null,
+          form: { title: '', category: 'Dwarf' }
         }
-
-        // 2. Запись в таблицу
-        const { error } = await sb.from('tomatoes').insert([
-          { title: this.form.title, category: this.form.category, image_url: imageUrl }
-        ]);
-
-        if (!error) {
-          this.form.title = ''; this.preview = ''; this.file = null;
-          await this.load(); // Обновление мгновенное
+      },
+      methods: {
+        async load() {
+          const { data } = await sb.from('tomatoes').select('*').order('created_at', { ascending: false });
+          this.tomatoes = data || [];
+        },
+        pickImage(e) {
+          this.file = e.target.files[0];
+        },
+        async save() {
+          if (!this.form.title) return;
+          this.loading = true;
+          try {
+            let imageUrl = '';
+            if (this.file) {
+              const name = `${Date.now()}_${this.file.name}`;
+              const { data: upData } = await sb.storage.from('tomatoes').upload(name, this.file);
+              if (upData) {
+                const { data: urlData } = sb.storage.from('tomatoes').getPublicUrl(name);
+                imageUrl = urlData.publicUrl;
+              }
+            }
+            const { data, error } = await sb.from('tomatoes').insert([{ title: this.form.title, category: this.form.category, image_url: imageUrl }]).select();
+            if (!error) {
+              this.tomatoes.unshift(data[0]);
+              this.form.title = '';
+              this.file = null;
+            }
+          } catch (e) { console.error(e); }
+          this.loading = false;
+        },
+        async remove(id) {
+          if (!confirm('Удалить?')) return;
+          await sb.from('tomatoes').delete().eq('id', id);
+          this.tomatoes = this.tomatoes.filter(t => t.id !== id);
         }
-      } catch (e) {
-        alert("Ошибка!");
-      } finally {
-        this.loading = false;
-      }
-    },
-    async remove(id) {
-      if (!confirm('Удалить навсегда?')) return;
-      await sb.from('tomatoes').delete().eq('id', id);
-      this.tomatoes = this.tomatoes.filter(t => t.id !== id);
-    }
-  },
-  mounted() { this.load(); }
-}).mount('#app');
-</script>
+      },
+      mounted() { this.load(); }
+    }).mount('#app');
+  </script>
 </body>
 </html>
