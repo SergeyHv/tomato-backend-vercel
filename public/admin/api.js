@@ -4,19 +4,29 @@ async function post(url, data) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: ADMIN_PASSWORD, ...data })
+    body: JSON.stringify({
+      password: ADMIN_PASSWORD,
+      ...data
+    })
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || 'API error');
+  let json;
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error('Некорректный ответ сервера');
   }
-  return res.json();
+
+  if (!res.ok) {
+    throw new Error(json?.error || 'Ошибка API');
+  }
+
+  return json;
 }
 
 export async function getProducts() {
   const res = await fetch('/api/admin/get-products');
-  if (!res.ok) throw new Error('GET products failed');
+  if (!res.ok) throw new Error('Ошибка загрузки списка');
   return res.json();
 }
 
@@ -34,7 +44,17 @@ export async function uploadImage(filename, base64) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ filename, base64 })
   });
-  if (!res.ok) throw new Error('Upload failed');
-  return res.json(); // { url }
-}
 
+  let json;
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error('Ошибка загрузки фото');
+  }
+
+  if (!res.ok) {
+    throw new Error(json?.error || 'Upload error');
+  }
+
+  return json; // { url }
+}
