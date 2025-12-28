@@ -31,6 +31,9 @@ const imagePreview = $('imagePreview');
 const submitBtn = $('submitBtn');
 const formTitle = $('formTitle');
 
+// 🔴 НОВОЕ: кнопка отмены
+let cancelBtn = null;
+
 // helpers
 const translit = s => s.toLowerCase()
   .replace(/[^a-z0-9]+/g, '-')
@@ -43,19 +46,37 @@ const ui = {
   }
 };
 
-// image
+// ===== IMAGE =====
 bindImageUpload(imageUpload, imagePreview, state);
 
-// list actions
+// ===== CANCEL MODE =====
+function exitEditMode() {
+  state.editId = null;
+  state.imageBase64 = '';
+  state.imageName = '';
+
+  productForm.reset();
+  imagePreview.classList.add('hidden');
+  formTitle.innerText = '➕ Новый сорт';
+
+  if (cancelBtn) {
+    cancelBtn.remove();
+    cancelBtn = null;
+  }
+}
+
+// ===== LIST ACTIONS =====
 bindListActions(productListDesktop, {
   onEdit(id) {
     if (isMobile()) return;
+
     const p = state.allProducts.find(x => x.id === id);
     if (!p) return;
 
     state.editId = id;
     state.imageBase64 = '';
     state.imageName = '';
+
     formTitle.innerText = '✏️ Редактирование сорта';
 
     titleInput.value = p.title || '';
@@ -76,8 +97,22 @@ bindListActions(productListDesktop, {
 
     imagePreview.src = p.images || '';
     imagePreview.classList.remove('hidden');
+
+    // 🔴 НОВОЕ: кнопка "Отмена"
+    if (!cancelBtn) {
+      cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.innerText = '✖ Отмена';
+      cancelBtn.className =
+        'w-full mt-2 bg-gray-200 text-gray-800 py-3 rounded-xl text-lg';
+
+      cancelBtn.onclick = exitEditMode;
+      submitBtn.after(cancelBtn);
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
+
   async onDelete(id) {
     if (!confirm('Удалить сорт?')) return;
     const { deleteProduct } = await import('./api.js');
@@ -87,7 +122,7 @@ bindListActions(productListDesktop, {
   }
 });
 
-// save
+// ===== SAVE =====
 productForm.onsubmit = async e => {
   e.preventDefault();
   submitBtn.disabled = true;
@@ -107,16 +142,14 @@ productForm.onsubmit = async e => {
         `Вес=${propWeight.value}`
     });
 
-    showToast(toast, state.editId ? 'Изменения сохранены' : 'Сорт добавлен');
+    showToast(
+      toast,
+      state.editId ? 'Изменения сохранены' : 'Сорт добавлен'
+    );
 
-    state.editId = null;
-    state.imageBase64 = '';
-    state.imageName = '';
-    productForm.reset();
-    imagePreview.classList.add('hidden');
-    formTitle.innerText = '➕ Новый сорт';
-
+    exitEditMode();
     await loadAll(state, ui);
+
   } catch (err) {
     console.error(err);
     showToast(toast, 'Ошибка сохранения', false);
@@ -126,5 +159,5 @@ productForm.onsubmit = async e => {
   submitBtn.innerText = '💾 Сохранить сорт';
 };
 
-// init
+// ===== INIT =====
 loadAll(state, ui);
