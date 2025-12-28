@@ -6,8 +6,13 @@
   let imageName = '';
 
   const $ = id => document.getElementById(id);
+  const isMobile = () => window.innerWidth < 768;
 
-  const productList   = $('productList');
+  const productListDesktop = $('productList');
+  const productListMobile  = $('productListMobile');
+  const searchDesktop      = $('searchInputDesktop');
+  const searchMobile       = $('searchInputMobile');
+
   const productForm   = $('productForm');
   const titleInput    = $('title');
   const categoryInput = $('category');
@@ -21,8 +26,6 @@
   const imagePreview  = $('imagePreview');
   const submitBtn     = $('submitBtn');
   const formTitle     = $('formTitle');
-
-  const isMobile = () => window.innerWidth < 768;
 
   const translit = str => {
     const map = {
@@ -38,72 +41,47 @@
       .replace(/^-+|-+$/g, '');
   };
 
-  function resetForm() {
-    editId = null;
-    imageBase64 = '';
-    imageName = '';
-    productForm.reset();
-    if (imagePreview) imagePreview.classList.add('hidden');
-    formTitle.innerText = '➕ Новый сорт';
-    if (isMobile()) titleInput.focus();
-  }
-
-  async function loadProducts() {
-    if (!productList) return;
-    const res = await fetch('/api/admin/get-products');
-    allProducts = await res.json();
-
-    productList.innerHTML = allProducts.map(p => `
-      <div class="p-2 border rounded-xl flex items-center gap-3 bg-white">
+  function renderList(list, data) {
+    if (!list) return;
+    list.innerHTML = data.map(p => `
+      <div class="p-3 border rounded-xl bg-white flex gap-3 items-center">
         <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
           ${p.images ? `<img src="${p.images}" class="w-12 h-12 rounded-lg object-cover">` : '🍅'}
         </div>
-        <div class="flex-1 truncate">
-          <div class="font-semibold text-sm">${p.title}</div>
-          <div class="text-xs text-gray-500">${p.category || ''}</div>
+        <div class="flex-1">
+          <div class="font-semibold">${p.title}</div>
+          <div class="text-sm text-gray-500">${p.category || ''}</div>
         </div>
-        <button onclick="editProduct('${p.id}')">✏️</button>
       </div>
     `).join('');
   }
 
-  window.editProduct = id => {
-    if (isMobile()) return;
-    const p = allProducts.find(x => x.id === id);
-    if (!p) return;
+  async function loadProducts() {
+    const res = await fetch('/api/admin/get-products');
+    allProducts = await res.json();
+    renderList(productListDesktop, allProducts);
+    renderList(productListMobile, allProducts);
+  }
 
-    editId = id;
-    imageBase64 = '';
-    imageName = '';
+  function filterProducts(query) {
+    const q = query.toLowerCase();
+    const filtered = allProducts.filter(p =>
+      (p.title || '').toLowerCase().includes(q)
+    );
+    renderList(productListDesktop, filtered);
+    renderList(productListMobile, filtered);
+  }
 
-    formTitle.innerText = '✏️ Редактирование сорта';
-
-    titleInput.value = p.title || '';
-    categoryInput.value = p.category || '';
-    priceInput.value = p.price || '';
-    tagsInput.value = p.tags || '';
-    descInput.value = p.description || '';
-
-    const map = {};
-    (p.props || '').split(';').forEach(x => {
-      const [k,v] = x.split('=');
-      if (k) map[k] = v;
-    });
-
-    propTerm.value = map['Срок'] || '';
-    propHeight.value = map['Высота'] || '';
-    propWeight.value = map['Вес'] || '';
-
-    if (p.images) {
-      imagePreview.src = p.images;
-      imagePreview.classList.remove('hidden');
-    }
-  };
+  if (searchDesktop) {
+    searchDesktop.addEventListener('input', e => filterProducts(e.target.value));
+  }
+  if (searchMobile) {
+    searchMobile.addEventListener('input', e => filterProducts(e.target.value));
+  }
 
   imageUpload.addEventListener('change', () => {
     const file = imageUpload.files[0];
     if (!file) return;
-
     imageName = file.name;
     const reader = new FileReader();
     reader.onload = e => {
@@ -117,10 +95,7 @@
   productForm.onsubmit = async e => {
     e.preventDefault();
 
-    if (!titleInput.value.trim()) {
-      alert('Введите название сорта');
-      return;
-    }
+    if (!titleInput.value.trim()) return alert('Введите название');
 
     submitBtn.disabled = true;
     submitBtn.innerText = '⏳ Сохраняем…';
@@ -149,8 +124,8 @@
         body: JSON.stringify({
           id,
           title: titleInput.value,
-          price: priceInput?.value || '',
           category: categoryInput.value,
+          price: priceInput?.value || '',
           tags: tagsInput?.value || '',
           description: descInput?.value || '',
           props,
@@ -158,16 +133,17 @@
         })
       });
 
-      resetForm();
+      productForm.reset();
+      imagePreview.classList.add('hidden');
+      imageBase64 = '';
+      imageName = '';
+
       await loadProducts();
+      if (isMobile()) window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-      if (isMobile()) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-
-    } catch (err) {
+    } catch (e) {
       alert('Ошибка сохранения');
-      console.error(err);
+      console.error(e);
     }
 
     submitBtn.disabled = false;
@@ -175,6 +151,5 @@
   };
 
   loadProducts();
-  if (isMobile()) titleInput.focus();
 
 })();
