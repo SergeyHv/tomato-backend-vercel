@@ -1,5 +1,5 @@
 import { bindImageUpload } from './images.js';
-import { renderDesktop, renderMobile, showToast } from './ui.js';
+import { renderDesktop, renderMobile } from './ui.js';
 import { loadAll, bindListActions, handleSave } from './products.js';
 
 const $ = id => document.getElementById(id);
@@ -16,7 +16,6 @@ const state = {
 const productListDesktop = $('productList');
 const productListMobile  = $('productListMobile');
 const productForm = $('productForm');
-const toast = $('toast');
 
 const titleInput = $('title');
 const categoryInput = $('category');
@@ -122,7 +121,6 @@ bindListActions(productListDesktop, {
     if (!confirm('Удалить сорт?')) return;
     const { deleteProduct } = await import('./api.js');
     await deleteProduct(id);
-    showToast(toast, 'Сорт удалён');
     await loadAll(state, ui);
   }
 });
@@ -148,23 +146,16 @@ productForm.onsubmit = async e => {
         `Вес=${propWeight.value}`
     });
 
-    showToast(
-      toast,
-      state.editId ? 'Изменения сохранены' : 'Сорт добавлен'
-    );
-
     exitEditMode();
 
     try {
       await loadAll(state, ui);
     } catch {}
 
-  } catch (err) {
-    showToast(toast, 'Ошибка сохранения', false);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerText = '💾 Сохранить сорт';
-  }
+  } catch {}
+
+  submitBtn.disabled = false;
+  submitBtn.innerText = '💾 Сохранить сорт';
 };
 
 /* ===== INIT ===== */
